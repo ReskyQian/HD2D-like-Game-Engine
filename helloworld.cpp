@@ -1,5 +1,9 @@
-#include <stdio.h>
+#include "helloworld.h"
 int main() {
-  printf("hello new world"); // 新的hello world输出内容
-  return 0;
+	test();
+	return 0;
+}
+
+void test(void) {
+	printf("hello new world"); // 新的hello world输出内容
 }
