@@ -1,0 +1,5 @@
+SET(ENGINE_ROOT_DIR "${HD2D_ROOT_DIR}/engine")
+SET(THIRD_PARTY_DIR "${ENGINE_ROOT_DIR}/3rd_party")
+SET(ENGINE_ASSET_DIR "/asset")
+
+ADD_EXECUTABLE(hello helloworld.cpp)
