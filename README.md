@@ -3,7 +3,7 @@
 The content is based on **LearnOpenGL** and extends it to hd2d style.
 
 ## Prerequisites
-To build HD2D-like Game Engine, you must first install the following tools.
+To build this HD2D-like Game Engine, you must first install the following tools.
 
 ### Windows 10/11
 + Visual Studio 2019 (or more recent)
