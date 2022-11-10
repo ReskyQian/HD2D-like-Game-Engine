@@ -1,6 +1,9 @@
 # Folders
 build/
 
+# Command
+clear.bat
+
 # Visual Studio Code
 .vscode/
 *.code-workspace

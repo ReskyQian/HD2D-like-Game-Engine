@@ -1,0 +1,30 @@
+SET(third_party_folder "ThirdParty")
+
+IF(NOT TARGET glm)
+    OPTION(BUILD_STATIC_LIBS "" ON)
+    OPTION(BUILD_TESTING "" OFF)
+    OPTION(GLM_TEST_ENABLE "" OFF)
+    ADD_SUBDIRECTORY(glm)
+    SET_TARGET_PROPERTIES(glm_static PROPERTIES FOLDER ${third_party_folder}/glm)
+ENDIF()
+
+IF(NOT TARGET glfw)
+    OPTION(GLFW_BUILD_EXAMPLES "" OFF)
+    OPTION(GLFW_BUILD_TESTS "" OFF)
+    OPTION(GLFW_BUILD_DOCS "" OFF)
+    OPTION(GLFW_INSTALL "" OFF)
+    ADD_SUBDIRECTORY(glfw)
+    SET_TARGET_PROPERTIES(glfw PROPERTIES FOLDER ${third_party_folder}/glfw)
+    SET_TARGET_PROPERTIES(update_mappings PROPERTIES FOLDER ${third_party_folder}/glfw)
+ENDIF()
+
+IF(NOT TARGET glad)
+    ADD_SUBDIRECTORY(glad)
+    SET_TARGET_PROPERTIES(glad PROPERTIES FOLDER ${third_party_folder}/glad)
+ENDIF()
+
+IF(NOT TARGET stb)
+    INCLUDE(stb.cmake)
+    SET_TARGET_PROPERTIES(stb PROPERTIES FOLDER ${third_party_folder}/stb)
+ENDIF()
+
