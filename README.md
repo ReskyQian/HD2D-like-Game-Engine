@@ -14,4 +14,4 @@ To build this HD2D-like Game Engine, you must first install the following tools.
 
 ### Build on Windows
 1. Execute **build.bat**
-2. Execute **run,bat** or find **hd2d.exe** in **bin** directory.
+2. Execute **run.bat** or find **hd2d.exe** in **bin** directory.
