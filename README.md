@@ -19,7 +19,3 @@ To build this HD2D-like Game Engine, you must first install the following tools.
 ## Welcome feedback and suggestions
 Since the project is still on developing, more content will be launched later.
 If you have any suggestions，please contact me.
-
-## Welcome feedback and suggestions
-Since the project is still on developing, more content will be launched later.
-If you have any suggestions，please contact me.
