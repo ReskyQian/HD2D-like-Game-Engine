@@ -4,6 +4,9 @@ build/
 # Command
 clear.bat
 
+# Resource
+.cpt
+
 # Visual Studio Code
 .vscode/
 *.code-workspace

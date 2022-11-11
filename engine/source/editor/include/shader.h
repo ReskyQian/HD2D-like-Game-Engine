@@ -12,7 +12,7 @@ public:
     Shader(Shader&& other) noexcept = default;
     Shader& operator=(Shader&& other) noexcept = default;
 
-    ~Shader();
+    virtual ~Shader();
 
     constexpr unsigned get_id() const noexcept {return id_;}
 
@@ -42,6 +42,8 @@ public:
     void set_uniform(std::string_view name, bool value) const noexcept;
     void set_uniform(std::string_view name, int value) const noexcept;
     void set_uniform(std::string_view name, float value) const noexcept;
+
+    void set_texture(std::string_view name, int value) const noexcept;
 
 private:
     unsigned id_;

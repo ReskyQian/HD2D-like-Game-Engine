@@ -1,4 +1,5 @@
 #include "editor/include/shader.h"
+#include "editor/include/texture2d.h"
 
 #include <string>
 #include <string_view>
@@ -103,6 +104,11 @@ void ShaderProgram::set_uniform(std::string_view name, int value) const noexcept
 void ShaderProgram::set_uniform(std::string_view name, float value) const noexcept
 {
     glUniform1f(glGetUniformLocation(id_, name.data()), value);
+}
+
+void ShaderProgram::set_texture(std::string_view name, int value) const noexcept
+{
+    ShaderProgram::set_uniform(name, value);
 }
 
 void ShaderProgram::use() const noexcept
