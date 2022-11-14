@@ -1,5 +1,5 @@
 # HD2D-like Game Engine
-**HD2D-like Game Engine** is a tiny **game engine** specialized for hd2d game like [octopath traveler](https://en.wikipedia.org/wiki/Octopath_Traveler). <br /> 
+**HD2D-like Game Engine** is a tiny **game engine** specialized for hd2d game like [Octopath Traveler](https://en.wikipedia.org/wiki/Octopath_Traveler). <br /> 
 The content is based on [LearnOpenGL](https://learnopengl-cn.github.io/) and extends it to hd2d style.
 
 ## Prerequisites
@@ -14,7 +14,7 @@ To build this HD2D-like Game Engine, you must first install the following tools.
 
 ### Build on Windows
 1. Execute **build.bat**
-2. Execute **run.bat** or find **hd2d.exe** in **bin** directory.
+2. Execute **run.bat** or find **hd2dEditor.exe** in **bin** directory.
 
 ## References
 + [Piccolo](https://github.com/BoomingTech/Piccolo)
