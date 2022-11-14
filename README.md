@@ -16,6 +16,13 @@ To build this HD2D-like Game Engine, you must first install the following tools.
 1. Execute **build.bat**
 2. Execute **run.bat** or find **hd2d.exe** in **build** directory.
 
+## References
++ [Piccolo](https://github.com/BoomingTech/Piccolo)
++ [Cpp-game-engine-book](https://github.com/ThisisGame/cpp-game-engine-book)
++ [TprPix](https://github.com/turesnake/tprPix)
++ [游戏引擎架构(第2版)](http://www.broadview.com.cn/book/2704)
++ [游戏开发：世嘉新人培训教材](http://www.ituring.com.cn/book/1742)
+
 ## Welcome feedback and suggestions
 Since the project is still on developing, more content will be launched later.
 If you have any suggestions，please contact me.
