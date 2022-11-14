@@ -1,8 +1,9 @@
 # Folders
 build/
+bin/
 
 # Command
-clear.bat
+# clear.bat
 
 # Resource
 .cpt

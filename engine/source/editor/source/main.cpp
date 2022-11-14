@@ -2,6 +2,9 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
+#include <filesystem>
+
+#include "editor/include/config_manager.h"
 #include "editor/include/shader.h"
 #include "editor/include/texture2d.h"
 
@@ -24,8 +27,13 @@ unsigned int indices[] = {
 void processInput(GLFWwindow *window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-int main(void)
+int main(int argc, char** argv)
 {
+    std::filesystem::path executable_path(argv[0]);
+    std::filesystem::path config_file_path = executable_path.parent_path() / "Hd2dEditor.ini";
+    ConfigManager config_manager;
+    config_manager.initialize(config_file_path);
+
     if (!glfwInit())
         return -1;
     GLFWwindow* window = glfwCreateWindow(SRC_WIDTH, SRC_HEIGHT, "Hd2d Game Engine", NULL, NULL);
@@ -38,12 +46,10 @@ int main(void)
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     gladLoadGL();
 
-    std::string shader_path("D:\\Github\\HD2D-like-Game-Engine\\engine\\shader\\");
+    std::string vs_path = (config_manager.getShaderPath() / "quad.vs").generic_string();
+    std::string fs_path = (config_manager.getShaderPath() / "quad.fs").generic_string();
 
-    ShaderProgram shaderProgram(
-        shader_path + std::string("quad.vs"), 
-        shader_path + std::string("quad.fs")
-    );
+    ShaderProgram shaderProgram(vs_path, fs_path);
 
     unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
@@ -68,17 +74,13 @@ int main(void)
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
-    std::string path("D:\\Github\\HD2D-like-Game-Engine\\engine\\source\\editor\\resource\\");
-    Texture2D::CompressImageFile(
-        path + std::string("PNG\\pocky1.png"),
-        path + std::string("CPT\\pocky1.cpt")
-    );
-    Texture2D* texture1 = Texture2D::LoadFromCptFile(path + std::string("CPT\\pocky1.cpt"));
-    Texture2D::CompressImageFile(
-        path + std::string("PNG\\pocky2.png"),
-        path + std::string("CPT\\pocky2.cpt")
-    );
-     Texture2D* texture2 = Texture2D::LoadFromCptFile(path + std::string("CPT\\pocky2.cpt"));
+    std::string pocky1_png = (config_manager.getTexturePath() / "pocky1.png").generic_string();
+    std::string pocky1_cpt = (config_manager.getTexturePath() / "pocky1.cpt").generic_string();
+    std::string pocky2_png = (config_manager.getTexturePath() / "pocky2.png").generic_string();
+    std::string pocky2_cpt = (config_manager.getTexturePath() / "pocky2.cpt").generic_string();
+
+    Texture2D* texture1 = Texture2D::LoadTexture(pocky1_png, pocky1_cpt);
+    Texture2D* texture2 = Texture2D::LoadTexture(pocky2_png, pocky2_cpt);
     shaderProgram.use();
     shaderProgram.set_texture("texture1", 0);
     shaderProgram.set_texture("texture2", 1);

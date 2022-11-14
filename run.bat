@@ -1,1 +1,1 @@
-build\engine\source\editor\Release\Hd2dEditor.exe
+bin\Hd2dEditor.exe

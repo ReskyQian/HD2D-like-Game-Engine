@@ -16,6 +16,7 @@ public:
     static Texture2D* LoadFromFile(std::string_view image_file_path);
     static Texture2D* LoadFromCptFile(std::string_view image_file_path);
     static void CompressImageFile(std::string_view image_file_path, std::string_view save_image_file_path);
+    static Texture2D* LoadTexture(std::string_view png_path, std::string_view cpt_path);
 
 public:
     int mipmap_level_;

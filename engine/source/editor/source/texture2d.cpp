@@ -16,8 +16,7 @@ using std::ios;
 /// @brief load texture from image file to GPU
 /// @param image_file_path  texture file path
 /// @return image info
-Texture2D* Texture2D::LoadFromFile(std::string_view image_file_path)
-{
+Texture2D* Texture2D::LoadFromFile(std::string_view image_file_path) {
     Texture2D* texture2d = new Texture2D();
 
     // flip the image for alignment in OpenGL
@@ -83,8 +82,7 @@ Texture2D* Texture2D::LoadFromFile(std::string_view image_file_path)
 /// @brief load texture from compressed image file to GPU
 /// @param image_file_path compressed texture file path
 /// @return image info
-Texture2D* Texture2D::LoadFromCptFile(std::string_view image_file_path)
-{
+Texture2D* Texture2D::LoadFromCptFile(std::string_view image_file_path) {
     Texture2D* texture2d = new Texture2D();
 
     std::ifstream fs{};
@@ -104,6 +102,7 @@ Texture2D* Texture2D::LoadFromCptFile(std::string_view image_file_path)
         texture2d->width_ = cpt_file_head.width_;
         texture2d->height_ = cpt_file_head.height_;
 
+        // FIXME: Merge settings for GPU
         glGenTextures(1, &(texture2d->gl_texture_id_));
         glBindTexture(GL_TEXTURE_2D, texture2d->gl_texture_id_);
 
@@ -136,9 +135,8 @@ Texture2D* Texture2D::LoadFromCptFile(std::string_view image_file_path)
 ///        data comes from GPU, which ensures to be uploaded by LoadFromFile() 
 /// @param image_file_path normal texture file path
 /// @param save_image_file_path compressed texture saved file path
-void Texture2D::CompressImageFile(std::string_view image_file_path, std::string_view save_image_file_path)
-{
-    Texture2D* texture2d = Texture2D::LoadFromFile(image_file_path);
+void Texture2D::CompressImageFile(std::string_view image_file_path, std::string_view save_image_file_path) {
+    Texture2D* texture2d = LoadFromFile(image_file_path);
 
     // get success or not
     GLint compress_success=0;
@@ -177,8 +175,7 @@ void Texture2D::CompressImageFile(std::string_view image_file_path, std::string_
 /// @brief differ if file exists and if it is cpt format
 /// @param image_file_path cpt file path
 /// @return if true, cpt has generated and usable
-bool Texture2D::IsCptFileExist(std::string_view image_file_path)
-{
+bool Texture2D::IsCptFileExist(std::string_view image_file_path) {
     bool isExist = false;
     bool isCpt = false;
     std::ifstream fs{};
@@ -193,4 +190,15 @@ bool Texture2D::IsCptFileExist(std::string_view image_file_path)
     }
     fs.close();
     return isExist && isCpt;
+}
+
+/// @brief Load texture from image file path
+/// @param cpt_path default load path
+/// @param png_path if cpt path is invalid, load from png path
+/// @return texture description of image
+Texture2D* Texture2D::LoadTexture(std::string_view png_path, std::string_view cpt_path) {
+    if (!IsCptFileExist(cpt_path)) {
+        CompressImageFile(png_path, cpt_path);
+    }
+    return LoadFromCptFile(cpt_path);    
 }
