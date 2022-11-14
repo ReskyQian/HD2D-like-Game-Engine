@@ -28,7 +28,7 @@ int main(void)
 {
     if (!glfwInit())
         return -1;
-    GLFWwindow* window = glfwCreateWindow(SRC_WIDTH, SRC_HEIGHT, "Hello World", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SRC_WIDTH, SRC_HEIGHT, "Hd2d Game Engine", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -38,9 +38,12 @@ int main(void)
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     gladLoadGL();
 
+    std::string shader_path("D:\\Github\\HD2D-like-Game-Engine\\engine\\shader\\");
+
     ShaderProgram shaderProgram(
-        "D:\\Github\\HD2D-like-Game-Engine\\engine\\shader\\quad.vs", 
-        "D:\\Github\\HD2D-like-Game-Engine\\engine\\shader\\quad.fs");
+        shader_path + std::string("quad.vs"), 
+        shader_path + std::string("quad.fs")
+    );
 
     unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
@@ -67,18 +70,18 @@ int main(void)
 
     std::string path("D:\\Github\\HD2D-like-Game-Engine\\engine\\source\\editor\\resource\\");
     Texture2D::CompressImageFile(
-        path + std::string("PNG\\awesomeface.png"),
-        path + std::string("CPT\\face.cpt")
+        path + std::string("PNG\\pocky1.png"),
+        path + std::string("CPT\\pocky1.cpt")
     );
-    Texture2D* texture1 = Texture2D::LoadFromCptFile(path + std::string("CPT\\face.cpt"));
+    Texture2D* texture1 = Texture2D::LoadFromCptFile(path + std::string("CPT\\pocky1.cpt"));
     Texture2D::CompressImageFile(
-        path + std::string("PNG\\container.jpg"),
-        path + std::string("CPT\\container.cpt")
+        path + std::string("PNG\\pocky2.png"),
+        path + std::string("CPT\\pocky2.cpt")
     );
-    Texture2D* texture2 = Texture2D::LoadFromCptFile(path + std::string("CPT\\container.cpt"));
+     Texture2D* texture2 = Texture2D::LoadFromCptFile(path + std::string("CPT\\pocky2.cpt"));
     shaderProgram.use();
-    shaderProgram.set_texture("texture1", texture1->gl_texture_id_);
-    shaderProgram.set_texture("texture2", texture2->gl_texture_id_);
+    shaderProgram.set_texture("texture1", 0);
+    shaderProgram.set_texture("texture2", 1);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -94,6 +97,11 @@ int main(void)
         glBindTexture(GL_TEXTURE_2D, texture1->gl_texture_id_);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2->gl_texture_id_);
+
+        float timeSpd = 2.0f;
+        float timeValue = glfwGetTime() * timeSpd;
+        float mixValue = sin(timeValue - 3.14f) / 2.0f + 0.5f;
+        shaderProgram.set_uniform("mixValue", mixValue);
 
         // render the triangle
         shaderProgram.use();

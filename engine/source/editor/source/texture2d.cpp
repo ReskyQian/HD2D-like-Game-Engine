@@ -173,3 +173,24 @@ void Texture2D::CompressImageFile(std::string_view image_file_path, std::string_
     output_file_stream.write((char*)img, compress_size);
     output_file_stream.close();
 }
+
+/// @brief differ if file exists and if it is cpt format
+/// @param image_file_path cpt file path
+/// @return if true, cpt has generated and usable
+bool Texture2D::IsCptFileExist(std::string_view image_file_path)
+{
+    bool isExist = false;
+    bool isCpt = false;
+    std::ifstream fs{};
+    fs.open(std::string{image_file_path}, ios::in | ios::binary);
+    isExist = fs.good();
+    if (isExist) {
+        std::stringstream ss{};
+        ss << fs.rdbuf();
+        char file_head[3];
+        ss.read(file_head, sizeof(file_head));
+        isCpt = CptFileHead::isCptFile(file_head);
+    }
+    fs.close();
+    return isExist && isCpt;
+}

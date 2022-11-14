@@ -1,6 +1,7 @@
-SET(ENGINE_ROOT_DIR "${ENGINE_ROOT_DIR}/engine")
-SET(THIRD_PARTY_DIR "${ENGINE_ROOT_DIR}/3rd_party")
-SET(ENGINE_ASSET_DIR "/asset")
+set(ENGINE_ROOT_DIR "${ENGINE_ROOT_DIR}/engine")
+set(THIRD_PARTY_DIR "${ENGINE_ROOT_DIR}/3rd_party")
+set(ENGINE_ASSET_DIR "/asset")
 
-ADD_SUBDIRECTORY(3rd_party)
-ADD_SUBDIRECTORY(source/editor)
+add_subdirectory(3rd_party)
+add_subdirectory(source/editor)
+add_subdirectory(shader)
