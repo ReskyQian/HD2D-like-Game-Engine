@@ -1,6 +1,9 @@
 #include <glad/glad.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <filesystem>
 
@@ -8,8 +11,8 @@
 #include "editor/include/shader.h"
 #include "editor/include/texture2d.h"
 
-const unsigned int SRC_WIDTH = 1024;
-const unsigned int SRC_HEIGHT = 768;
+const unsigned int SRC_WIDTH = 1080;
+const unsigned int SRC_HEIGHT = 1080;
 
 float vertices[] = {
     // positions          // colors           // texture coords
@@ -104,6 +107,12 @@ int main(int argc, char** argv)
         float timeValue = glfwGetTime() * timeSpd;
         float mixValue = sin(timeValue - 3.14f) / 2.0f + 0.5f;
         shaderProgram.set_uniform("mixValue", mixValue);
+
+        // create transformations
+        glm::mat4 transform = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        transform = glm::translate(transform, glm::vec3(0.0f, -0.0f, 0.0f));
+        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        shaderProgram.set_uniform("transform", transform);
 
         // render the triangle
         shaderProgram.use();

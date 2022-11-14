@@ -1,8 +1,12 @@
 #include "editor/include/shader.h"
-#include "editor/include/texture2d.h"
+// #include "editor/include/texture2d.h"
 
 #include <string>
 #include <string_view>
+
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -104,6 +108,11 @@ void ShaderProgram::set_uniform(std::string_view name, int value) const noexcept
 void ShaderProgram::set_uniform(std::string_view name, float value) const noexcept
 {
     glUniform1f(glGetUniformLocation(id_, name.data()), value);
+}
+
+void ShaderProgram::set_uniform(std::string_view name, glm::mat4 value) const noexcept
+{
+    glUniformMatrix4fv(glGetUniformLocation(id_, name.data()), 1, GL_FALSE, glm::value_ptr(value));
 }
 
 void ShaderProgram::set_texture(std::string_view name, int value) const noexcept
