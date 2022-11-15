@@ -76,8 +76,8 @@ ShaderProgram::ShaderProgram(std::string_view vertex_shader, std::string_view fr
     FragmentShader fragment {fragment_shader};
 
     id_ = glCreateProgram();
-    glAttachShader(id_, vertex.get_id());
-    glAttachShader(id_, fragment.get_id());
+    glAttachShader(id_, vertex.getId());
+    glAttachShader(id_, fragment.getId());
     glLinkProgram(id_);
 
     int success{};
@@ -95,29 +95,29 @@ ShaderProgram::~ShaderProgram() {
     }
 }
 
-void ShaderProgram::set_uniform(std::string_view name, bool value) const noexcept
+void ShaderProgram::setUniform(std::string_view name, bool value) const noexcept
 {
     glUniform1i(glGetUniformLocation(id_, name.data()), static_cast<int>(value));
 }
 
-void ShaderProgram::set_uniform(std::string_view name, int value) const noexcept
+void ShaderProgram::setUniform(std::string_view name, int value) const noexcept
 {
     glUniform1i(glGetUniformLocation(id_, name.data()), value);
 }
 
-void ShaderProgram::set_uniform(std::string_view name, float value) const noexcept
+void ShaderProgram::setUniform(std::string_view name, float value) const noexcept
 {
     glUniform1f(glGetUniformLocation(id_, name.data()), value);
 }
 
-void ShaderProgram::set_uniform(std::string_view name, glm::mat4 value) const noexcept
+void ShaderProgram::setUniform(std::string_view name, glm::mat4 value) const noexcept
 {
     glUniformMatrix4fv(glGetUniformLocation(id_, name.data()), 1, GL_FALSE, glm::value_ptr(value));
 }
 
-void ShaderProgram::set_texture(std::string_view name, int value) const noexcept
+void ShaderProgram::setTexture(std::string_view name, int value) const noexcept
 {
-    ShaderProgram::set_uniform(name, value);
+    ShaderProgram::setUniform(name, value);
 }
 
 void ShaderProgram::use() const noexcept

@@ -15,7 +15,7 @@ public:
 
     virtual ~Shader();
 
-    constexpr unsigned get_id() const noexcept {return id_;}
+    constexpr unsigned getId() const noexcept {return id_;}
 
 protected:
     unsigned id_;
@@ -40,12 +40,12 @@ public:
 
     void use() const noexcept;
 
-    void set_uniform(std::string_view name, bool value) const noexcept;
-    void set_uniform(std::string_view name, int value) const noexcept;
-    void set_uniform(std::string_view name, float value) const noexcept;
-    void set_uniform(std::string_view name, glm::mat4 value) const noexcept;
+    void setUniform(std::string_view name, bool value) const noexcept;
+    void setUniform(std::string_view name, int value) const noexcept;
+    void setUniform(std::string_view name, float value) const noexcept;
+    void setUniform(std::string_view name, glm::mat4 value) const noexcept;
 
-    void set_texture(std::string_view name, int value) const noexcept;
+    void setTexture(std::string_view name, int value) const noexcept;
 
 private:
     unsigned id_;

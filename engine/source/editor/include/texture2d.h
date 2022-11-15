@@ -12,11 +12,11 @@ public:
     Texture2D(Texture2D&& other) = delete;
     Texture2D& operator=(Texture2D&& other) = delete;
 
-    static bool IsCptFileExist(std::string_view image_file_path);
-    static Texture2D* LoadFromFile(std::string_view image_file_path);
-    static Texture2D* LoadFromCptFile(std::string_view image_file_path);
-    static void CompressImageFile(std::string_view image_file_path, std::string_view save_image_file_path);
-    static Texture2D* LoadTexture(std::string_view png_path, std::string_view cpt_path);
+    static bool isCptFileExist(std::string_view image_file_path);
+    static Texture2D* loadFromFile(std::string_view image_file_path);
+    static Texture2D* loadFromCptFile(std::string_view image_file_path);
+    static void compressImageFile(std::string_view image_file_path, std::string_view save_image_file_path);
+    static Texture2D* loadTexture(std::string_view png_path, std::string_view cpt_path);
 
 public:
     int mipmap_level_;
@@ -45,7 +45,7 @@ public:
     };
 
 private:
-    explicit Texture2D() : mipmap_level_(0) {};
+    explicit Texture2D() : mipmap_level_{0} {};
     ~Texture2D();
 };
 
