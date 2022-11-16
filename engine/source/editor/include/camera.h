@@ -17,8 +17,8 @@ namespace Hd2d {
 
     const float YAW = -90.0f;
     const float PITCH = 0.0f;
-    const float SPEED = 2.5f;
-    const float SENSITIVITY = 0.1f;
+    const float SPEED = 2.0f;
+    const float SENSITIVITY = 0.05f;
     const float ZOOM = 45.0f;
 
     class Camera {
@@ -28,7 +28,7 @@ namespace Hd2d {
         explicit Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch);
         ~Camera();
 
-        glm::mat4 getViewMatrix() const noexcept {
+        glm::mat4 getViewMatrix() {
             return glm::lookAt(position_, position_ + front_, up_);
         }
 

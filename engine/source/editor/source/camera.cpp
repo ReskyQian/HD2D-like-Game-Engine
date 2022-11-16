@@ -13,6 +13,7 @@ namespace Hd2d {
         yaw_{YAW},
         pitch_{PITCH},
         front_{glm::vec3(0.0f, 0.0f, -1.0f)},
+        world_up_{glm::vec3(0.0f, 1.0f, 0.0f)},
         move_speed_{SPEED},
         mouse_sensitivity_{SENSITIVITY},
         zoom_{ZOOM}
@@ -26,6 +27,7 @@ namespace Hd2d {
         yaw_{YAW},
         pitch_{PITCH},
         front_{glm::vec3(0.0f, 0.0f, -1.0f)},
+        world_up_{glm::vec3(0.0f, 1.0f, 0.0f)},
         move_speed_{SPEED},
         mouse_sensitivity_{SENSITIVITY},
         zoom_{ZOOM}
@@ -39,6 +41,7 @@ namespace Hd2d {
         yaw_{yaw},
         pitch_{pitch},
         front_{glm::vec3(0.0f, 0.0f, -1.0f)},
+        world_up_{glm::vec3(0.0f, 1.0f, 0.0f)},
         move_speed_{SPEED},
         mouse_sensitivity_{SENSITIVITY},
         zoom_{ZOOM}
@@ -80,7 +83,7 @@ namespace Hd2d {
     }
 
     void Camera::processMouseScroll(float yoffset) {
-        zoom_ = yoffset;
+        zoom_ -= (float)yoffset;
         zoom_ = std::clamp(zoom_, 1.0f, 45.0f);
     }
 

@@ -82,9 +82,9 @@ float vertices[] = {
     };
 
 void processInput(GLFWwindow *window);
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void framebufferSizeCallback(GLFWwindow* window, int width, int height);
+void mouseCallback(GLFWwindow* window, double xpos, double ypos);
+void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 int main(int argc, char** argv)
 {
@@ -102,9 +102,9 @@ int main(int argc, char** argv)
         return -1;
     }
     glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+    glfwSetCursorPosCallback(window, mouseCallback);
+    glfwSetScrollCallback(window, scrollCallback);
 
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -112,6 +112,7 @@ int main(int argc, char** argv)
     gladLoadGL();
 
     glEnable(GL_DEPTH_TEST);
+    glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
 
     std::string vs_path = (config_manager.getShaderPath() / "quad.vs").generic_string();
     std::string fs_path = (config_manager.getShaderPath() / "quad.fs").generic_string();
@@ -219,7 +220,7 @@ void processInput(GLFWwindow *window)
         camera.processKeyboard(Hd2d::Camera_Movement::RIGHT, delta_time);
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and 
     // height will be significantly larger than specified on retina displays.
@@ -228,7 +229,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
-void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+void mouseCallback(GLFWwindow* window, double xposIn, double yposIn)
 {
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
@@ -251,7 +252,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.processMouseScroll(static_cast<float>(yoffset));
 }
