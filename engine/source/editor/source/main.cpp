@@ -22,7 +22,7 @@ bool first_mouse = true;
 float delta_time = 0.0f;
 float last_frame = 0.0f;
 
-Hd2d::Camera camera(glm::vec3(0.0f, 0.0f, 5.0f));
+Hd2d::Camera camera(glm::vec3(0.0f, 0.0f, 8.0f));
 
 float vertices[] = {
         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f,  0.0f, -1.0f,
@@ -190,9 +190,24 @@ int main(int argc, char** argv)
         float timeValue = glfwGetTime() * timeSpd;
         float mixValue = sin(timeValue - 3.14f) / 2.0f + 0.5f;
         color_shader.setUniform("mixValue", mixValue);
-        color_shader.setUniform("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        color_shader.setUniform("lightPos", light_pos);
+        color_shader.setUniform("light.position", light_pos);
         color_shader.setUniform("viewPos", camera.getPosition());
+
+        // light properties
+        glm::vec3 light_color;
+        light_color.x           = static_cast<float>(sin(glfwGetTime() * 2.0) + 1.0f);
+        light_color.y           = static_cast<float>(sin(glfwGetTime() * 0.7) + 1.0f);
+        light_color.z           = static_cast<float>(sin(glfwGetTime() * 1.3) + 1.0f);
+        glm::vec3 diffuse_color = light_color   * glm::vec3(0.6f); // decrease the influence
+        glm::vec3 ambient_color = diffuse_color * glm::vec3(0.2f); // low influence
+        color_shader.setUniform("light.ambient", ambient_color);
+        color_shader.setUniform("light.diffuse", diffuse_color);
+        color_shader.setUniform("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+        color_shader.setUniform("material.ambient",  glm::vec3(1.0f, 0.5f, 0.31f));
+        color_shader.setUniform("material.diffuse",  glm::vec3(1.0f, 0.5f, 0.31f));
+        color_shader.setUniform("material.specular", glm::vec3(0.5f, 0.5f, 0.5f ));
+        color_shader.setUniform("material.shininess", 32.0f);
 
         // create transformations
         glm::mat4 view       = camera.getViewMatrix();
@@ -226,8 +241,9 @@ int main(int argc, char** argv)
 
         glm::mat4 model(1.0f);
         model = glm::translate(model, light_pos);
-        model = glm::scale(model, glm::vec3(0.2f));
+        model = glm::scale(model, glm::vec3(0.1f));
         light_cube_shader.setUniform("model", model);
+        light_cube_shader.setUniform("color", diffuse_color);
 
         glBindVertexArray(light_cube_VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
