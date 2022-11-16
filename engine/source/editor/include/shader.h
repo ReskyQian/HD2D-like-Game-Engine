@@ -40,10 +40,11 @@ public:
 
     void use() const noexcept;
 
-    void setUniform(std::string_view name, bool value) const noexcept;
-    void setUniform(std::string_view name, int value) const noexcept;
-    void setUniform(std::string_view name, float value) const noexcept;
-    void setUniform(std::string_view name, glm::mat4 value) const noexcept;
+    void setUniform(const std::string_view name, bool value) const noexcept;
+    void setUniform(const std::string_view name, int value) const noexcept;
+    void setUniform(const std::string_view name, float value) const noexcept;
+    void setUniform(const std::string_view name, const glm::vec3& value) const noexcept;
+    void setUniform(const std::string_view name, const glm::mat4& value) const noexcept;
 
     void setTexture(std::string_view name, int value) const noexcept;
 

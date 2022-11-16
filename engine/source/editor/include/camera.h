@@ -28,7 +28,11 @@ namespace Hd2d {
         explicit Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch);
         ~Camera();
 
-        glm::mat4 getViewMatrix() {
+        constexpr glm::vec3 getPosition() const noexcept {
+            return position_;
+        }
+
+        glm::mat4 getViewMatrix() const noexcept {
             return glm::lookAt(position_, position_ + front_, up_);
         }
 
