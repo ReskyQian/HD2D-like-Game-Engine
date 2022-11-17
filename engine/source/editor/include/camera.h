@@ -32,6 +32,10 @@ namespace Hd2d {
             return position_;
         }
 
+        constexpr glm::vec3 getFront() const noexcept {
+            return front_;
+        }
+
         glm::mat4 getViewMatrix() const noexcept {
             return glm::lookAt(position_, position_ + front_, up_);
         }
