@@ -243,7 +243,8 @@ int main(int argc, char** argv)
         model = glm::translate(model, light_pos);
         model = glm::scale(model, glm::vec3(0.1f));
         light_cube_shader.setUniform("model", model);
-        light_cube_shader.setUniform("color", diffuse_color);
+        light_cube_shader.setUniform("diffuse_color", diffuse_color);
+        light_cube_shader.setUniform("material_diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
 
         glBindVertexArray(light_cube_VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
