@@ -21,6 +21,7 @@ To build this HD2D-like Game Engine, you must first install the following tools.
 + [Piccolo(Games104)](https://github.com/BoomingTech/Piccolo)
 + [Cpp-game-engine-book](https://github.com/ThisisGame/cpp-game-engine-book)
 + [TprPix](https://github.com/turesnake/tprPix)
++ [Game Programming in C++: Creating 3D Games](https://www.pearson.com/en-us/subject-catalog/p/game-programming-in-c-creating-3d-games/P200000009521/9780134597201)
 + [游戏引擎架构（第2版）](http://www.broadview.com.cn/book/2704)
 + [游戏开发：世嘉新人培训教材](http://www.ituring.com.cn/book/1742)
 
