@@ -8,4 +8,3 @@ set(DEVELOP_CONFIG_DIR "configs/development")
 
 add_subdirectory(3rd_party)
 add_subdirectory(source/editor)
-

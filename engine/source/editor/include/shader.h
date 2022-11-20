@@ -7,11 +7,11 @@
 class Shader {
 public:
     explicit Shader(std::string_view file_path);
-    Shader(const Shader&) = delete;
-    Shader& operator=(const Shader&) = delete;
+    // Shader(const Shader&) = delete;
+    // Shader& operator=(const Shader&) = delete;
 
-    Shader(Shader&& other) noexcept = default;
-    Shader& operator=(Shader&& other) noexcept = default;
+    // Shader(Shader&& other) noexcept = default;
+    // Shader& operator=(Shader&& other) noexcept = default;
 
     virtual ~Shader();
 
@@ -42,6 +42,7 @@ public:
 
     void setUniform(const std::string_view name, bool value) const noexcept;
     void setUniform(const std::string_view name, int value) const noexcept;
+    void setUniform(const std::string_view name, unsigned int value) const noexcept;
     void setUniform(const std::string_view name, float value) const noexcept;
     void setUniform(const std::string_view name, const glm::vec3& value) const noexcept;
     void setUniform(const std::string_view name, const glm::mat4& value) const noexcept;

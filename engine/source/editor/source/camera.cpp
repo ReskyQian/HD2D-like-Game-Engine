@@ -97,4 +97,4 @@ namespace Hd2d {
         right_ = glm::normalize(glm::cross(front_, world_up_));
         up_ = glm::normalize(glm::cross(right_, front_));
     }
-};
+}

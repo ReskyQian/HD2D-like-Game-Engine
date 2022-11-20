@@ -105,6 +105,11 @@ void ShaderProgram::setUniform(const std::string_view name, int value) const noe
     glUniform1i(glGetUniformLocation(id_, name.data()), value);
 }
 
+void ShaderProgram::setUniform(const std::string_view name, unsigned int value) const noexcept
+{
+    glUniform1i(glGetUniformLocation(id_, name.data()), value);
+}
+
 void ShaderProgram::setUniform(const std::string_view name, float value) const noexcept
 {
     glUniform1f(glGetUniformLocation(id_, name.data()), value);

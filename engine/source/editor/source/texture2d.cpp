@@ -13,192 +13,190 @@ using std::ifstream;
 using std::ofstream;
 using std::ios;
 
-/// @brief load texture from image file to GPU
-/// @param image_file_path  texture file path
-/// @return image info
-Texture2D* Texture2D::loadFromFile(std::string_view image_file_path) {
-    Texture2D* texture2d = new Texture2D();
+namespace Hd2d {
+    /// @brief load texture from image file to GPU
+    /// @param image_file_path  texture file path
+    /// @return image info
+    std::shared_ptr<Texture2D> Texture2D::loadFromFile(std::string_view image_file_path) {
+        std::shared_ptr<Texture2D> texture2d = std::make_shared<Texture2D>();
 
-    // flip the image for alignment in OpenGL
-    stbi_set_flip_vertically_on_load(true);
-    int channels_in_file;
+        // flip the image for alignment in OpenGL
+        stbi_set_flip_vertically_on_load(true);
+        int channels_in_file;
 
-    unsigned char* data = stbi_load(
-        std::string{image_file_path}.c_str(), 
-        &(texture2d->width_), 
-        &(texture2d->height_), 
-        &channels_in_file, 
-        0
-    );
+        unsigned char* data = stbi_load(
+            std::string{image_file_path}.c_str(), 
+            &(texture2d->width_), 
+            &(texture2d->height_), 
+            &channels_in_file, 
+            0
+        );
 
-    int image_data_format = GL_RGB;
-    if (data!= nullptr)
-    {
-        //decide color type according to nums of channel
-        switch (channels_in_file) {
-            case 1:
-            {
-                image_data_format = GL_ALPHA;
-                break;
-            }
-            case 3:
-            {
-                image_data_format = GL_RGB;
-                texture2d->gl_texture_format_=GL_COMPRESSED_RGB;
-                break;
-            }
-            case 4:
-            {
-                image_data_format = GL_RGBA;
-                texture2d->gl_texture_format_=GL_COMPRESSED_RGBA;
-                break;
+        int image_data_format = GL_RGB;
+        if (data!= nullptr)
+        {
+            //decide color type according to nums of channel
+            switch (channels_in_file) {
+                case 1:
+                    image_data_format = GL_ALPHA;
+                    break;
+                case 3:
+                    image_data_format = GL_RGB;
+                    texture2d->gl_texture_format_=GL_COMPRESSED_RGB;
+                    break;
+                case 4:
+                    image_data_format = GL_RGBA;
+                    texture2d->gl_texture_format_=GL_COMPRESSED_RGBA;
+                    break;
             }
         }
-    }
 
-    glGenTextures(1, &(texture2d->gl_texture_id_));
-    glBindTexture(GL_TEXTURE_2D, texture2d->gl_texture_id_);
-
-    // upload normal texture
-    glTexImage2D(GL_TEXTURE_2D, texture2d->mipmap_level_, 
-                texture2d->gl_texture_format_, texture2d->width_, texture2d->height_, 0, 
-                image_data_format, GL_UNSIGNED_BYTE, data);
-
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    // filters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-    stbi_image_free(data);
-
-    return texture2d;
-}
-
-/// @brief load texture from compressed image file to GPU
-/// @param image_file_path compressed texture file path
-/// @return image info
-Texture2D* Texture2D::loadFromCptFile(std::string_view image_file_path) {
-    Texture2D* texture2d = new Texture2D();
-
-    std::ifstream fs{};
-    fs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-
-    try {
-        fs.open(std::string{image_file_path}, ios::in | ios::binary);
-        std::stringstream ss{};
-        ss << fs.rdbuf();
-        fs.close();
-        CptFileHead cpt_file_head;
-        ss.read((char*)&cpt_file_head, sizeof(CptFileHead));
-        unsigned char* data =(unsigned char*)malloc(cpt_file_head.compress_size_);
-        ss.read((char*)data, cpt_file_head.compress_size_);
-
-        texture2d->gl_texture_format_ = cpt_file_head.gl_texture_format_;
-        texture2d->width_ = cpt_file_head.width_;
-        texture2d->height_ = cpt_file_head.height_;
-
-        // FIXME: Merge settings for GPU
         glGenTextures(1, &(texture2d->gl_texture_id_));
         glBindTexture(GL_TEXTURE_2D, texture2d->gl_texture_id_);
 
-        // Upload compressoed texture
-        glCompressedTexImage2D(GL_TEXTURE_2D, 0, texture2d->gl_texture_format_, 
-                                texture2d->width_, texture2d->height_, 0, 
-                                cpt_file_head.compress_size_, data);
+        // upload normal texture
+        glTexImage2D(GL_TEXTURE_2D, texture2d->mipmap_level_, 
+                    texture2d->gl_texture_format_, texture2d->width_, texture2d->height_, 0, 
+                    image_data_format, GL_UNSIGNED_BYTE, data);
 
-        glGenerateMipmap(GL_TEXTURE_2D);
+        configTexture();
 
+        stbi_image_free(data);
+
+        return texture2d;
+    }
+
+    /// @brief load texture from compressed image file to GPU
+    /// @param image_file_path compressed texture file path
+    /// @return image info
+    std::shared_ptr<Texture2D> Texture2D::loadFromCptFile(std::string_view image_file_path) {
+        std::shared_ptr<Texture2D> texture2d = std::make_shared<Texture2D>();
+
+        std::ifstream fs{};
+        fs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+        try {
+            fs.open(std::string{image_file_path}, ios::in | ios::binary);
+            std::stringstream ss{};
+            ss << fs.rdbuf();
+            fs.close();
+            CptFileHead cpt_file_head;
+            ss.read((char*)&cpt_file_head, sizeof(CptFileHead));
+            unsigned char* data =(unsigned char*)malloc(cpt_file_head.compress_size_);
+            ss.read((char*)data, cpt_file_head.compress_size_);
+
+            texture2d->gl_texture_format_ = cpt_file_head.gl_texture_format_;
+            texture2d->width_ = cpt_file_head.width_;
+            texture2d->height_ = cpt_file_head.height_;
+
+            glGenTextures(1, &(texture2d->gl_texture_id_));
+            glBindTexture(GL_TEXTURE_2D, texture2d->gl_texture_id_);
+
+            // Upload compressoed texture
+            glCompressedTexImage2D(GL_TEXTURE_2D, 0, texture2d->gl_texture_format_, 
+                                    texture2d->width_, texture2d->height_, 0, 
+                                    cpt_file_head.compress_size_, data);
+
+            configTexture();
+
+            delete (data);
+        }
+        catch (std::ifstream::failure e) {
+            std::cout << "Error::Texture::IMAGE_File_Not_Successfully_Read" << std::endl;
+        }
+
+        return texture2d;
+    }
+
+    /// @brief to compress a texture and save it, 
+    ///        info comes from image_file,
+    ///        data comes from GPU, which ensures to be uploaded by LoadFromFile() 
+    /// @param image_file_path normal texture file path
+    /// @param save_image_file_path compressed texture saved file path
+    void Texture2D::compressImageFile(std::string_view image_file_path, std::string_view save_image_file_path) {
+        std::shared_ptr<Texture2D> texture2d = loadFromFile(image_file_path);
+
+        // get success or not
+        GLint compress_success=0;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPRESSED, &compress_success);
+
+        // get compress size
+        GLint compress_size=0;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPRESSED_IMAGE_SIZE, &compress_size);
+
+        // get compress format
+        GLint compress_format=0;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &compress_format);
+
+        //4. download compressed texture
+        void* img = malloc(compress_size);
+        glGetCompressedTexImage(GL_TEXTURE_2D, 0, img);
+
+        //5. save compressed texture
+        ofstream output_file_stream(std::string{save_image_file_path}, ios::out | ios::binary);
+
+        CptFileHead cpt_file_head;
+        cpt_file_head.type_[0]           = 'c';
+        cpt_file_head.type_[1]           = 'p';
+        cpt_file_head.type_[2]           = 't';
+        cpt_file_head.mipmap_level_      = texture2d->mipmap_level_;
+        cpt_file_head.width_             = texture2d->width_;
+        cpt_file_head.height_            = texture2d->height_;
+        cpt_file_head.gl_texture_format_ = compress_format;
+        cpt_file_head.compress_size_     = compress_size;
+
+        output_file_stream.write((char*)&cpt_file_head, sizeof(CptFileHead));
+        output_file_stream.write((char*)img, compress_size);
+        output_file_stream.close();
+
+        free(img);
+    }
+
+    /// @brief differ if file exists and if it is cpt format
+    /// @param image_file_path cpt file path
+    /// @return if true, cpt has generated and usable
+    bool Texture2D::isCptFileExist(std::string_view image_file_path) {
+        bool isExist = false;
+        bool isCpt = false;
+        std::ifstream fs{};
+        fs.open(std::string{image_file_path}, ios::in | ios::binary);
+        isExist = fs.good();
+        if (isExist) {
+            std::stringstream ss{};
+            ss << fs.rdbuf();
+            char file_head[3];
+            ss.read(file_head, sizeof(file_head));
+            isCpt = CptFileHead::isCptFile(file_head);
+        }
+        fs.close();
+        return isExist && isCpt;
+    }
+
+    /// @brief Load texture from image file path
+    /// @param cpt_path default load path
+    /// @param png_path if cpt path is invalid, load from png path
+    /// @return texture description of image
+    std::shared_ptr<Texture2D> Texture2D::loadTexture(std::string_view png_path, std::string_view cpt_path) {
+        if (!isCptFileExist(cpt_path)) {
+            compressImageFile(png_path, cpt_path);
+        }
+        return loadFromCptFile(cpt_path);    
+    }
+
+    /// @brief 把上传texture的步骤放在了最后面，不知道会不会有问题
+    /// @param texture2d 
+    void Texture2D::configTexture() {
         // set the texture wrapping parameters
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
         // filters
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    }
+
+    void Texture2D::generateMipmap() {
+        glGenerateMipmap(GL_TEXTURE_2D);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-        delete (data);
     }
-    catch (std::ifstream::failure e) {
-        std::cout << "Error::Texture::IMAGE_File_Not_Successfully_Read" << std::endl;
-    }
-
-    return texture2d;
-}
-
-/// @brief to compress a texture and save it, 
-///        info comes from image_file,
-///        data comes from GPU, which ensures to be uploaded by LoadFromFile() 
-/// @param image_file_path normal texture file path
-/// @param save_image_file_path compressed texture saved file path
-void Texture2D::compressImageFile(std::string_view image_file_path, std::string_view save_image_file_path) {
-    Texture2D* texture2d = loadFromFile(image_file_path);
-
-    // get success or not
-    GLint compress_success=0;
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPRESSED, &compress_success);
-
-    // get compress size
-    GLint compress_size=0;
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPRESSED_IMAGE_SIZE, &compress_size);
-
-    // get compress format
-    GLint compress_format=0;
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &compress_format);
-
-    //4. download compressed texture
-    void* img = malloc(compress_size);
-    glGetCompressedTexImage(GL_TEXTURE_2D, 0, img);
-
-    //5. save compressed texture
-    ofstream output_file_stream(std::string{save_image_file_path}, ios::out | ios::binary);
-
-    CptFileHead cpt_file_head;
-    cpt_file_head.type_[0]           = 'c';
-    cpt_file_head.type_[1]           = 'p';
-    cpt_file_head.type_[2]           = 't';
-    cpt_file_head.mipmap_level_      = texture2d->mipmap_level_;
-    cpt_file_head.width_             = texture2d->width_;
-    cpt_file_head.height_            = texture2d->height_;
-    cpt_file_head.gl_texture_format_ = compress_format;
-    cpt_file_head.compress_size_     = compress_size;
-
-    output_file_stream.write((char*)&cpt_file_head, sizeof(CptFileHead));
-    output_file_stream.write((char*)img, compress_size);
-    output_file_stream.close();
-}
-
-/// @brief differ if file exists and if it is cpt format
-/// @param image_file_path cpt file path
-/// @return if true, cpt has generated and usable
-bool Texture2D::isCptFileExist(std::string_view image_file_path) {
-    bool isExist = false;
-    bool isCpt = false;
-    std::ifstream fs{};
-    fs.open(std::string{image_file_path}, ios::in | ios::binary);
-    isExist = fs.good();
-    if (isExist) {
-        std::stringstream ss{};
-        ss << fs.rdbuf();
-        char file_head[3];
-        ss.read(file_head, sizeof(file_head));
-        isCpt = CptFileHead::isCptFile(file_head);
-    }
-    fs.close();
-    return isExist && isCpt;
-}
-
-/// @brief Load texture from image file path
-/// @param cpt_path default load path
-/// @param png_path if cpt path is invalid, load from png path
-/// @return texture description of image
-Texture2D* Texture2D::loadTexture(std::string_view png_path, std::string_view cpt_path) {
-    if (!isCptFileExist(cpt_path)) {
-        compressImageFile(png_path, cpt_path);
-    }
-    return loadFromCptFile(cpt_path);    
 }

@@ -6,11 +6,13 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <filesystem>
+#include <memory>
 
 #include "editor/include/config_manager.h"
 #include "editor/include/camera.h"
 #include "editor/include/shader.h"
 #include "editor/include/texture2d.h"
+#include "editor/include/mesh.h"
 
 const unsigned int SCR_WIDTH = 1080;
 const unsigned int SCR_HEIGHT = 1080;
@@ -165,8 +167,8 @@ int main(int argc, char** argv)
     std::string pocky2_png = (config_manager.getTexturePath() / "pocky2.png").generic_string();
     std::string pocky2_cpt = (config_manager.getTexturePath() / "pocky2.cpt").generic_string();
 
-    Texture2D* texture1 = Texture2D::loadTexture(pocky1_png, pocky1_cpt);
-    Texture2D* texture2 = Texture2D::loadTexture(pocky2_png, pocky2_cpt);
+    std::shared_ptr<Hd2d::Texture2D> texture1 = Hd2d::Texture2D::loadTexture(pocky1_png, pocky1_cpt);
+    std::shared_ptr<Hd2d::Texture2D> texture2 = Hd2d::Texture2D::loadTexture(pocky2_png, pocky2_cpt);
     color_shader.use();
     color_shader.setTexture("texture1", 0);
     color_shader.setTexture("texture2", 1);
@@ -182,13 +184,13 @@ int main(int argc, char** argv)
 
         // render background
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClearColor(0.75f, 0.82f, 0.94f, 0.6f);
 
         // bind textures on corresponding texture units
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture1->gl_texture_id_);
+        glBindTexture(GL_TEXTURE_2D, texture1->getTextureId());
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2->gl_texture_id_);
+        glBindTexture(GL_TEXTURE_2D, texture2->getTextureId());
 
         color_shader.use();
 

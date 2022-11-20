@@ -1,5 +1,5 @@
-# ifndef _CONFIG_MANAGER_H__
-# define _CONFIG_MANAGER_H__
+#ifndef _CONFIG_MANAGER_H__
+#define _CONFIG_MANAGER_H__
 
 #include <filesystem>
 
@@ -17,4 +17,4 @@ private:
     std::filesystem::path shader_path_;
 };
 
-# endif // _CONFIG_MANAGER_H__
+#endif // _CONFIG_MANAGER_H__

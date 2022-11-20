@@ -28,3 +28,23 @@ if(NOT TARGET stb)
     set_target_properties(stb PROPERTIES FOLDER ${third_party_folder}/stb)
 endif()
 
+if(NOT TARGET assimp)
+    file(GLOB assimp_sources CONFIGURE_DEPENDS  "${CMAKE_CURRENT_SOURCE_DIR}/assimp/*.h")
+    add_library(assimp INTERFACE ${assimp_sources})
+    target_include_directories(assimp INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/assimp)
+    set_target_properties(assimp PROPERTIES FOLDER ${third_party_folder}/assimp)
+endif()
+
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}")
+link_directories(${ASSIMP_LIBRARY})
+find_package(ASSIMP REQUIRED)
+message(STATUS "Found ASSIMP in ${ASSIMP_INCLUDE_DIR}")
+
+file(GLOB DLLS "$(CMAKE_CURRENT_SOURCE_DIR)/dll/*.dll")
+
+
+
+
+
+
