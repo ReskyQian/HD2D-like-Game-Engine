@@ -21,7 +21,7 @@ namespace Hd2d {
         std::shared_ptr<Texture2D> texture2d = std::make_shared<Texture2D>();
 
         // flip the image for alignment in OpenGL
-        stbi_set_flip_vertically_on_load(true);
+        stbi_set_flip_vertically_on_load(false);
         int channels_in_file;
 
         unsigned char* data = stbi_load(
