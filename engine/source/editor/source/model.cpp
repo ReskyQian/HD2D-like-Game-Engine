@@ -42,9 +42,9 @@ namespace Hd2d {
 
     std::shared_ptr<Mesh> Model::processMesh(aiMesh *mesh, const aiScene *scene) {
         // data to fill
-        std::shared_ptr<std::vector<Vertex>>       vertices = std::make_shared<std::vector<Vertex>>();
-        std::shared_ptr<std::vector<unsigned int>> indices  = std::make_shared<std::vector<unsigned int>>();
-        std::shared_ptr<std::vector<Texture2D>>    textures = std::make_shared<std::vector<Texture2D>>();;
+        std::shared_ptr<std::vector<Vertex>>       vertices     = std::make_shared<std::vector<Vertex>>();
+        std::shared_ptr<std::vector<unsigned int>> indices      = std::make_shared<std::vector<unsigned int>>();
+        std::shared_ptr<std::vector<Texture2D>>    all_textures = std::make_shared<std::vector<Texture2D>>();;
 
         // walk through each of the mesh's vertices
         for(unsigned int i = 0; i < mesh->mNumVertices; i++)
@@ -109,24 +109,24 @@ namespace Hd2d {
         // 1. diffuse maps
         std::shared_ptr<std::vector<Texture2D>> diffuseMaps = 
         loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-        textures->insert(textures->end(), diffuseMaps->begin(), diffuseMaps->end());
+        all_textures->insert(all_textures->end(), diffuseMaps->begin(), diffuseMaps->end());
         // 2. specular maps
         std::shared_ptr<std::vector<Texture2D>> specularMaps =
         loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
-        textures->insert(textures->end(), specularMaps->begin(), specularMaps->end());
+        all_textures->insert(all_textures->end(), specularMaps->begin(), specularMaps->end());
         // 3. normal maps
         std::shared_ptr<std::vector<Texture2D>> normalMaps =
         loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
-        textures->insert(textures->end(), normalMaps->begin(), normalMaps->end());
+        all_textures->insert(all_textures->end(), normalMaps->begin(), normalMaps->end());
         // 4. height maps
         std::shared_ptr<std::vector<Texture2D>> heightMaps =
         loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
-        textures->insert(textures->end(), heightMaps->begin(), heightMaps->end());  
+        all_textures->insert(all_textures->end(), heightMaps->begin(), heightMaps->end());  
         // return a mesh object created from the extracted mesh data
-        return std::make_shared<Mesh>(*vertices, *indices, *textures);
+        return std::make_shared<Mesh>(*vertices, *indices, *all_textures);
     }
 
-    std::shared_ptr<std::vector<Texture2D>> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string_view typeName) {
+    std::shared_ptr<std::vector<Texture2D>> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName) {
         std::shared_ptr<std::vector<Texture2D>> textures = std::make_shared<std::vector<Texture2D>>();
         for(unsigned int i = 0; i < mat->GetTextureCount(type); i++)
         {

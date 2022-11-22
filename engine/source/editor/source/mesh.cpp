@@ -47,7 +47,7 @@ namespace Hd2d {
         
         // draw mesh
         glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices_.size()), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
         // always good practice to set everything back to defaults once configured.
@@ -64,6 +64,10 @@ namespace Hd2d {
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(Vertex), 
                      &vertices_[0], GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(unsigned int), 
+                     &indices_[0], GL_STATIC_DRAW);
 
         // position attribute
         glEnableVertexAttribArray(0);

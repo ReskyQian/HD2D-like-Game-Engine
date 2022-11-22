@@ -5,9 +5,9 @@
 #include <string>
 #include <memory>
 
-#include <Importer.hpp>
-#include <scene.h>
-#include <postprocess.h>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 #include "editor/include/shader.h"
 #include "editor/include/texture2d.h"
@@ -31,7 +31,7 @@ namespace Hd2d {
 
         void processNode(aiNode *node, const aiScene *scene);
         std::shared_ptr<Mesh> processMesh(aiMesh *mesh, const aiScene *scene);
-        std::shared_ptr<std::vector<Texture2D>> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string_view typeName);
+        std::shared_ptr<std::vector<Texture2D>> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName);
     };
 }
 

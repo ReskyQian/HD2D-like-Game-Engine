@@ -25,7 +25,7 @@ bool first_mouse = true;
 float delta_time = 0.0f;
 float last_frame = 0.0f;
 
-Hd2d::Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Hd2d::Camera camera(glm::vec3(0.0f, 5.0f, 10.0f));
 
 void processInput(GLFWwindow *window);
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 {
     std::filesystem::path executable_path(argv[0]);
     std::filesystem::path config_file_path = executable_path.parent_path() / "Hd2dEditor.ini";
-    ConfigManager config_manager;
+    Hd2d::ConfigManager config_manager;
     config_manager.initialize(config_file_path);
 
     if (!glfwInit())
@@ -53,14 +53,15 @@ int main(int argc, char** argv)
     glfwSetScrollCallback(window, scrollCallback);
 
     // tell GLFW to capture our mouse
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     gladLoadGL();
 
     glEnable(GL_DEPTH_TEST);
     glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
-
-    std::string model_path = (config_manager.getTexturePath() / "nanosuit/nanosuit.obj").generic_string();
+    // std::string model_path = (config_manager.getTexturePath() / "suzilan/suzilan.pmx").generic_string();
+    std::string model_path = (config_manager.getModelPath() / "swordMaid/swordMaid.pmx").generic_string();
+    // std::string model_path = (config_manager.getTexturePath() / "nanosuit/nanosuit.obj").generic_string();
     Hd2d::Model our_model(model_path);
 
     std::string color_vs_path = (config_manager.getShaderPath() / "model_loading.vs").generic_string();
@@ -81,7 +82,7 @@ int main(int argc, char** argv)
 
         // render
         // ------
-        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+        glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // don't forget to enable shader before setting uniforms
@@ -96,7 +97,7 @@ int main(int argc, char** argv)
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+        model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));	// it's a bit too big for our scene, so scale it down
         color_shader.setUniform("model", model);
         our_model.draw(color_shader);
 
