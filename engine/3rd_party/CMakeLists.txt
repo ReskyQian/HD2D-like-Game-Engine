@@ -29,22 +29,18 @@ if(NOT TARGET stb)
 endif()
 
 if(NOT TARGET assimp)
-    file(GLOB assimp_sources CONFIGURE_DEPENDS  "${CMAKE_CURRENT_SOURCE_DIR}/assimp/*.h")
-    add_library(assimp INTERFACE ${assimp_sources})
-    target_include_directories(assimp INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/assimp)
+    # file(GLOB assimp_sources CONFIGURE_DEPENDS  "${CMAKE_CURRENT_SOURCE_DIR}/assimp/*.h")
+    # target_include_directories(assimp INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/assimp)
+    include(assimp.cmake)
     set_target_properties(assimp PROPERTIES FOLDER ${third_party_folder}/assimp)
+    # set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}")
+    # find_package(ASSIMP REQUIRED)
+    # message(STATUS "Found ASSIMP in ${ASSIMP_INCLUDE_DIR}")
 endif()
 
+if(MSVC)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+    set(BUILD_SHARED_LIBS TRUE)
+endif()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}")
-link_directories(${ASSIMP_LIBRARY})
-find_package(ASSIMP REQUIRED)
-message(STATUS "Found ASSIMP in ${ASSIMP_INCLUDE_DIR}")
-
-file(GLOB DLLS "$(CMAKE_CURRENT_SOURCE_DIR)/dll/*.dll")
-
-
-
-
-
-
+# link_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib)
