@@ -1,31 +1,38 @@
-// #ifndef _MODEL_H__
-// #define _MODEL_H__
+#ifndef _MODEL_H__
+#define _MODEL_H__
 
-// #include <vector>
-// #include <string>
+#include <vector>
+#include <string>
+#include <memory>
 
-// #include "editor/include/shader.h"
-// #include "editor/include/texture2d.h"
-// #include "editor/include/mesh.h"
+#include <Importer.hpp>
+#include <scene.h>
+#include <postprocess.h>
 
-// namespace Hd2d {
-//     class Model {
-//     public:
-//         Model(std::string_view path);
-//         ~Model();
+#include "editor/include/shader.h"
+#include "editor/include/texture2d.h"
+#include "editor/include/mesh.h"
 
-//         void Draw(ShaderProgram& shader_program);
-//     private:
-//         // model data 
-//         std::vector<Texture2D> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
-//         std::vector<Mesh>    meshes;
-//         std::string directory;
-//         bool gammaCorrection;
+namespace Hd2d {
+    class Model {
+    public:
+        Model(std::string_view path);
 
-//         void loadModel(std::string_view path);
+        void draw(ShaderProgram& shader_program);
 
-//         void processNode(aiNode *node, const aiScene *scene);
-//     };
-// }
+    private:
+        // model data
+        std::vector<Texture2D> textures_loaded_;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
+        std::vector<Mesh>      meshes_;
+        std::string_view       directory_;
+        bool                   gammaCorrection_;
 
-// #endif // _MODEL_H__
+        void loadModel(std::string_view path);
+
+        void processNode(aiNode *node, const aiScene *scene);
+        std::shared_ptr<Mesh> processMesh(aiMesh *mesh, const aiScene *scene);
+        std::shared_ptr<std::vector<Texture2D>> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string_view typeName);
+    };
+}
+
+#endif // _MODEL_H__

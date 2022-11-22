@@ -31,27 +31,27 @@ namespace Hd2d {
 
     class Mesh {
     public:
-        explicit Mesh(std::vector<Vertex>&                           vertices_ ,
-                      std::vector<unsigned int>&                     indices_  ,
-                      std::vector<std::shared_ptr<Hd2d::Texture2D>>& textures_);
+        explicit Mesh(std::vector<Vertex>       vertices ,
+                      std::vector<unsigned int> indices  ,
+                      std::vector<Texture2D>    textures);
 
         ~Mesh() {
 
         }
 
-        constexpr std::vector<Vertex>&                           getVertices() {return vertices_;}
-        constexpr std::vector<unsigned int>&                     getIndices () {return indices_ ;}
-        constexpr std::vector<std::shared_ptr<Hd2d::Texture2D>>& getTextures() {return textures_;}
+        constexpr std::vector<Vertex>&       getVertices() {return vertices_;}
+        constexpr std::vector<unsigned int>& getIndices () {return indices_ ;}
+        constexpr std::vector<Texture2D>&    getTextures() {return textures_;}
 
-        void Draw(ShaderProgram& shader_program);
+        void draw(ShaderProgram& shader_program);
 
     private:
         unsigned int VAO, VBO, EBO;
 
         // mesh data
-        std::vector<Vertex>                           vertices_;
-        std::vector<unsigned int>                     indices_ ;
-        std::vector<std::shared_ptr<Hd2d::Texture2D>> textures_;
+        std::vector<Vertex>       vertices_;
+        std::vector<unsigned int> indices_ ;
+        std::vector<Texture2D>    textures_;
 
         void setupMesh();
 

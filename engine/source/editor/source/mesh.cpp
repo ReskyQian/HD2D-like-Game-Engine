@@ -8,9 +8,9 @@
 #include "editor/include/texture2d.h"
 
 namespace Hd2d {
-    Mesh::Mesh(std::vector<Vertex>&                           vertices   ,
-               std::vector<unsigned int>&                     indices    ,
-               std::vector<std::shared_ptr<Hd2d::Texture2D>>& textures ) :
+    Mesh::Mesh(std::vector<Vertex>       vertices   ,
+               std::vector<unsigned int> indices    ,
+               std::vector<Texture2D>    textures ) :
                vertices_ {vertices} ,
                indices_  {indices } ,
                textures_ {textures}
@@ -18,7 +18,7 @@ namespace Hd2d {
         setupMesh();
     }
 
-    void Mesh::Draw(ShaderProgram& shader_program) {
+    void Mesh::draw(ShaderProgram& shader_program) {
         // bind appropriate textures
         unsigned int diffuseNr  = 1;
         unsigned int specularNr = 1;
@@ -29,7 +29,7 @@ namespace Hd2d {
             glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
             // retrieve texture number (the N in diffuse_textureN)
             std::string number;
-            std::string name = std::string{textures_[i]->getTextureType()};
+            std::string name = std::string{textures_[i].getTextureType()};
             if(name == "texture_diffuse")
                 number = std::to_string(diffuseNr++);
             else if(name == "texture_specular")
@@ -42,7 +42,7 @@ namespace Hd2d {
             // now set the sampler to the correct texture unit
             shader_program.setUniform((name + number).c_str(), i);
             // and finally bind the texture
-            glBindTexture(GL_TEXTURE_2D, textures_[i]->getTextureId());
+            glBindTexture(GL_TEXTURE_2D, textures_[i].getTextureId());
         }
         
         // draw mesh
