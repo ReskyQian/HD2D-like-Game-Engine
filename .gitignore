@@ -5,6 +5,9 @@ bin/
 # Command
 # clear.bat
 
+# Debug
+.pdb
+
 # Resource
 .cpt
 
