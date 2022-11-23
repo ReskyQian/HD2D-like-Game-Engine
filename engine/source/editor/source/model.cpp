@@ -160,4 +160,9 @@ namespace Hd2d {
         for(unsigned int i = 0; i < meshes_.size(); i++)
             meshes_[i].draw(shader_program);
     }
+
+    void Model::deleteBuffer() {
+        for(unsigned int i = 0; i < meshes_.size(); i++)
+            meshes_[i].deleteBuffer();
+    }
 }

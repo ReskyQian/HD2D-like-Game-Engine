@@ -20,6 +20,8 @@ namespace Hd2d {
 
         void draw(ShaderProgram& shader_program);
 
+        void deleteBuffer();
+
     private:
         // model data
         std::vector<Texture2D> textures_loaded_;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.

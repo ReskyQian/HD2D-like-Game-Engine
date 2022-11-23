@@ -45,6 +45,8 @@ namespace Hd2d {
 
         void draw(ShaderProgram& shader_program);
 
+        void deleteBuffer();
+
     private:
         unsigned int VAO, VBO, EBO;
 

@@ -43,6 +43,7 @@ namespace Hd2d {
         static std::shared_ptr<Texture2D> loadTexture(std::string_view png_path, std::string_view cpt_path);
         static void configTexture();
         static void generateMipmap();
+        static void configClampWrapper();
 
     private:
         int mipmap_level_;

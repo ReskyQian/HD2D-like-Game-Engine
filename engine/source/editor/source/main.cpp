@@ -57,9 +57,13 @@ int main(int argc, char** argv)
 
     gladLoadGL();
 
-    glEnable(GL_DEPTH_TEST);
     glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
-    // std::string model_path = (config_manager.getTexturePath() / "suzilan/suzilan.pmx").generic_string();
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
     std::string model_path = (config_manager.getModelPath() / "swordMaid/swordMaid.pmx").generic_string();
     // std::string model_path = (config_manager.getTexturePath() / "nanosuit/nanosuit.obj").generic_string();
     Hd2d::Model our_model(model_path);
@@ -67,6 +71,55 @@ int main(int argc, char** argv)
     std::string color_vs_path = (config_manager.getShaderPath() / "model_loading.vs").generic_string();
     std::string color_fs_path = (config_manager.getShaderPath() / "model_loading.fs").generic_string();
     ShaderProgram color_shader(color_vs_path, color_fs_path);
+
+    std::string edge_vs_path = (config_manager.getShaderPath() / "edge.vs").generic_string();
+    std::string edge_fs_path = (config_manager.getShaderPath() / "edge.fs").generic_string();
+    ShaderProgram edge_shader(edge_vs_path, edge_fs_path);
+
+    // draw grass
+    std::string grass_path = (config_manager.getTexturePath() / "grass.png").generic_string();
+    std::shared_ptr<Hd2d::Texture2D> grass_texture = Hd2d::Texture2D::loadFromFile(grass_path);
+    Hd2d::Texture2D::configClampWrapper();
+
+    std::string blend_vs_path = (config_manager.getShaderPath() / "blending.vs").generic_string();
+    std::string blend_fs_path = (config_manager.getShaderPath() / "blending.fs").generic_string();
+    ShaderProgram blend_shader(blend_vs_path, blend_fs_path);
+
+    float transparentVertices[] = {
+        // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
+        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+        0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+
+        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+        1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+    };
+
+    std::vector<glm::vec3> vegetation 
+    {
+        glm::vec3(-1.5f, 0.0f, -0.48f),
+        glm::vec3( 1.5f, 0.0f, 0.51f),
+        glm::vec3( 0.0f, 0.0f, 0.7f),
+        glm::vec3(-0.3f, 0.0f, -2.3f),
+        glm::vec3 (0.5f, 0.0f, -0.6f)
+    };
+
+    // transparent VAO
+    unsigned int transparentVAO, transparentVBO;
+    glGenVertexArrays(1, &transparentVAO);
+    glGenBuffers(1, &transparentVBO);
+    glBindVertexArray(transparentVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, transparentVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), &transparentVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindVertexArray(0);
+
+    blend_shader.use();
+    blend_shader.setUniform("texture1", 0);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -77,30 +130,74 @@ int main(int argc, char** argv)
         last_frame = currentFrame;
 
         // input
-        // -----
         processInput(window);
 
         // render
-        // ------
-        glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // don't forget to enable shader before setting uniforms
-        color_shader.use();
+        glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.getViewMatrix();
+        edge_shader.use();
+        edge_shader.setUniform("projection", projection);
+        edge_shader.setUniform("view", view);
+
+        color_shader.use();
         color_shader.setUniform("projection", projection);
         color_shader.setUniform("view", view);
 
-        // render the loaded model
+        blend_shader.use();
+        blend_shader.setUniform("projection", projection);
+        blend_shader.setUniform("view", view);
+
+        glStencilMask(0x00);
+
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+        // draw other models here
+        glBindVertexArray(transparentVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, grass_texture->getTextureId());
+        for (unsigned int i = 0; i < vegetation.size(); i++)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, vegetation[i]);
+            blend_shader.setUniform("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);
+
+        color_shader.use();
+        // render the loaded model
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); 
         model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));	// it's a bit too big for our scene, so scale it down
         color_shader.setUniform("model", model);
         our_model.draw(color_shader);
 
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00);
+        glDisable(GL_DEPTH_TEST);
+
+        edge_shader.use();
+        glm::vec3 color;
+        color.x = static_cast<float>(sin(glfwGetTime() * 4.0) + 1.0f);
+        color.y = static_cast<float>(sin(glfwGetTime() * 1.4) + 1.0f);
+        color.z = static_cast<float>(sin(glfwGetTime() * 2.6) + 1.0f);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+        model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));	// it's a bit too big for our scene, so scale it down
+        edge_shader.setUniform("color", color);
+        edge_shader.setUniform("model", model);
+        our_model.draw(edge_shader);
+
+        glBindVertexArray(0);
+        glStencilMask(0xFF);
+        glStencilFunc(GL_ALWAYS, 0, 0xFF);
+        glEnable(GL_DEPTH_TEST);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -108,8 +205,9 @@ int main(int argc, char** argv)
         glfwPollEvents();
     }
 
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
+    our_model.deleteBuffer();
+    glDeleteVertexArrays(1, &transparentVAO);
+    glDeleteBuffers(1, &transparentVBO);
     glfwTerminate();
     return 0;
 }
