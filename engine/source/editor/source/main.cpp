@@ -102,10 +102,18 @@ int main(int argc, char** argv)
     std::string edge_fs_path = (config_manager.getShaderPath() / "edge.fs").generic_string();
     ShaderProgram edge_shader(edge_vs_path, edge_fs_path);
 
+    std::string screen_vs_path = (config_manager.getShaderPath() / "screen_shader.vs").generic_string();
+    std::string screen_fs_path = (config_manager.getShaderPath() / "screen_shader.fs").generic_string();
+    ShaderProgram screen_shader(screen_vs_path, screen_fs_path);
+
     // draw grass
     std::string grass_path = (config_manager.getTexturePath() / "grass.png").generic_string();
     std::shared_ptr<Hd2d::Texture2D> grass_texture = Hd2d::Texture2D::loadFromFile(grass_path);
     Hd2d::Texture2D::configClampWrapper();
+
+    // draw floor
+    std::string floor_path = (config_manager.getTexturePath() / "metal.png").generic_string();
+    std::shared_ptr<Hd2d::Texture2D> floor_texture = Hd2d::Texture2D::loadFromFile(floor_path);
 
     // draw windows
     std::string window_path = (config_manager.getTexturePath() / "blending_transparent_window.png").generic_string();
@@ -125,6 +133,28 @@ int main(int argc, char** argv)
         0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
         1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
         1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+    };
+
+    float plane_vertices[] = {
+        // positions          // texture Coords 
+         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+        -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+
+         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+         5.0f, -0.5f, -5.0f,  2.0f, 2.0f
+    };
+
+    float quad_vertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+        // positions   // texCoords
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+
+        -1.0f,  1.0f,  0.0f, 1.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+         1.0f,  1.0f,  1.0f, 1.0f
     };
 
     std::vector<glm::vec3> vegetation 
@@ -156,6 +186,18 @@ int main(int argc, char** argv)
         glm::vec3( 3.5f, 0.0f, -1.6f )
     };
 
+    // plane VAO
+    unsigned int planeVAO, planeVBO;
+    glGenVertexArrays(1, &planeVAO);
+    glGenBuffers(1, &planeVBO);
+    glBindVertexArray(planeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(plane_vertices), &plane_vertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
     // grass VAO
     unsigned int grassVAO, grassVBO;
     glGenVertexArrays(1, &grassVAO);
@@ -182,8 +224,51 @@ int main(int argc, char** argv)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glBindVertexArray(0);
 
+    // screen quad VAO
+    unsigned int quadVAO, quadVBO;
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), &quad_vertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
     blend_shader.use();
-    blend_shader.setUniform("texture1", 0);
+    blend_shader.setTexture("texture1", 0);
+
+    screen_shader.use();
+    screen_shader.setTexture("screenTexture", 0);
+
+    // framebuffer configuration
+    // -------------------------
+    const float buf_scale = 6.0f;
+    const int buf_width  = SCR_WIDTH / buf_scale;
+    const int buf_height = SCR_HEIGHT / buf_scale;
+
+    unsigned int framebuffer;
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    // create a color attachment texture
+    unsigned int texture_colorbuffer;
+    glGenTextures(1, &texture_colorbuffer);
+    glBindTexture(GL_TEXTURE_2D, texture_colorbuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, buf_width, buf_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_colorbuffer, 0);
+    // create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
+    unsigned int rbo;
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, buf_width, buf_height); // use a single renderbuffer object for both a depth AND stencil buffer.
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); // now actually attach it
+    // now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -204,6 +289,9 @@ int main(int argc, char** argv)
         }
 
         // render
+        glViewport(0, 0, buf_width, buf_height);
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+        glEnable(GL_DEPTH_TEST);
         glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -237,6 +325,13 @@ int main(int argc, char** argv)
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
 
+        // draw floor
+        glBindVertexArray(planeVAO);
+        glBindTexture(GL_TEXTURE_2D, floor_texture->getTextureId());
+        blend_shader.setUniform("model", glm::mat4(1.0f));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
         glStencilMask(0xFF);
 
@@ -244,7 +339,7 @@ int main(int argc, char** argv)
         color_shader.use();
         // draw the loaded model
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); 
+        model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f)); 
         model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
         color_shader.setUniform("model", model);
         our_model.draw(color_shader);
@@ -261,7 +356,7 @@ int main(int argc, char** argv)
         color.z = static_cast<float>(sin(glfwGetTime() * 2.6) + 1.0f);
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+        model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f)); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
         edge_shader.setUniform("color", color);
         edge_shader.setUniform("model", model);
@@ -285,6 +380,19 @@ int main(int argc, char** argv)
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
 
+        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+        // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+        // clear all relevant buffers
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        screen_shader.use();
+        glBindVertexArray(quadVAO);
+        glBindTexture(GL_TEXTURE_2D, texture_colorbuffer);	// use the color attachment texture as the texture of the quad plane
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
@@ -296,6 +404,10 @@ int main(int argc, char** argv)
     glDeleteBuffers(1, &grassVBO);
     glDeleteVertexArrays(1, &windowVAO);
     glDeleteBuffers(1, &windowVBO);
+    glDeleteVertexArrays(1, &planeVAO);
+    glDeleteBuffers(1, &planeVBO);
+    glDeleteVertexArrays(1, &quadVAO);
+    glDeleteBuffers(1, &quadVBO);
     glfwTerminate();
     exit(EXIT_SUCCESS);
     return 0;
