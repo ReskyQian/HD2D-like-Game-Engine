@@ -49,6 +49,10 @@ namespace Hd2d {
         updateCameraVectors();
     }
 
+    Camera& Camera::operator=(Camera& camera) {
+        return camera;
+    }
+
     Camera::~Camera() {}
 
     void Camera::processKeyboard(Camera_Movement direction, float delta_time) {

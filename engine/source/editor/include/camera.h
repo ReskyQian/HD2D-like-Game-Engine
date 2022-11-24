@@ -17,7 +17,7 @@ namespace Hd2d {
 
     const float YAW = -90.0f;
     const float PITCH = -10.0f;
-    const float SPEED = 2.0f;
+    const float SPEED = 3.0f;
     const float SENSITIVITY = 0.05f;
     const float ZOOM = 45.0f;
 
@@ -26,6 +26,8 @@ namespace Hd2d {
         explicit Camera();
         explicit Camera(glm::vec3 position);
         explicit Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch);
+        Camera& operator=(Camera& camera);
+
         ~Camera();
 
         constexpr glm::vec3 getPosition() const noexcept {

@@ -14,23 +14,32 @@
 #include "editor/include/camera.h"
 #include "editor/include/shader.h"
 #include "editor/include/model.h"
+#include "editor/include/input.h"
 
-const unsigned int SCR_WIDTH = 1080;
+const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
-
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
-bool first_mouse = true;
 
 float delta_time = 0.0f;
 float last_frame = 0.0f;
 
-Hd2d::Camera camera(glm::vec3(0.0f, 5.0f, 10.0f));
+Hd2d::Camera camera(glm::vec3(0.0f, 2.0f, 6.0f));
+Hd2d::Input input(&camera, SCR_WIDTH, SCR_HEIGHT);
 
-void processInput(GLFWwindow *window);
-void framebufferSizeCallback(GLFWwindow* window, int width, int height);
-void mouseCallback(GLFWwindow* window, double xpos, double ypos);
-void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+}
+
+void glfwMouseCallback(GLFWwindow* window, double xpos, double ypos) {
+    input.mouseCallback(window, xpos, ypos);
+}
+
+void glfwScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+    input.scrollCallback(window, xoffset, yoffset);
+}
+
+void initOpenGL() {
+
+}
 
 int main(int argc, char** argv)
 {
@@ -47,12 +56,14 @@ int main(int argc, char** argv)
         glfwTerminate();
         return -1;
     }
+
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
-    glfwSetCursorPosCallback(window, mouseCallback);
-    glfwSetScrollCallback(window, scrollCallback);
+    glfwSetCursorPosCallback(window, glfwMouseCallback);
+    glfwSetScrollCallback(window, glfwScrollCallback);
 
     // tell GLFW to capture our mouse
+    // otherwise mouse out of screen will be lost
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     gladLoadGL();
@@ -170,7 +181,7 @@ int main(int argc, char** argv)
         last_frame = currentFrame;
 
         // input
-        processInput(window);
+        input.processInput(window, delta_time);
 
         // sort for transparent object
         std::map<float, glm::vec3> sorted_map;
@@ -216,11 +227,12 @@ int main(int argc, char** argv)
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
         glStencilMask(0xFF);
 
+        glEnable(GL_CULL_FACE);
         color_shader.use();
         // draw the loaded model
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); 
-        model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));	// it's a bit too big for our scene, so scale it down
+        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
         color_shader.setUniform("model", model);
         our_model.draw(color_shader);
 
@@ -237,7 +249,7 @@ int main(int argc, char** argv)
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));	// it's a bit too big for our scene, so scale it down
+        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
         edge_shader.setUniform("color", color);
         edge_shader.setUniform("model", model);
         our_model.draw(edge_shader);
@@ -246,6 +258,8 @@ int main(int argc, char** argv)
         glStencilMask(0xFF);
         glStencilFunc(GL_ALWAYS, 0, 0xFF);
         glEnable(GL_DEPTH_TEST);
+
+        glDisable(GL_CULL_FACE);
 
         // draw transparent object (windows)
         blend_shader.use();
@@ -271,56 +285,4 @@ int main(int argc, char** argv)
     glDeleteBuffers(1, &windowVBO);
     glfwTerminate();
     return 0;
-}
-
-void processInput(GLFWwindow *window)
-{
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.processKeyboard(Hd2d::Camera_Movement::FORWARD, delta_time);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.processKeyboard(Hd2d::Camera_Movement::BACKWARD, delta_time);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.processKeyboard(Hd2d::Camera_Movement::LEFT, delta_time);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.processKeyboard(Hd2d::Camera_Movement::RIGHT, delta_time);
-}
-
-void framebufferSizeCallback(GLFWwindow* window, int width, int height)
-{
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
-}
-
-// glfw: whenever the mouse moves, this callback is called
-// -------------------------------------------------------
-void mouseCallback(GLFWwindow* window, double xposIn, double yposIn)
-{
-    float xpos = static_cast<float>(xposIn);
-    float ypos = static_cast<float>(yposIn);
-
-    if (first_mouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        first_mouse = false;
-    }
-
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-
-    lastX = xpos;
-    lastY = ypos;
-
-    camera.processMouseMovement(xoffset, yoffset);
-}
-
-// glfw: whenever the mouse scroll wheel scrolls, this callback is called
-// ----------------------------------------------------------------------
-void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    camera.processMouseScroll(static_cast<float>(yoffset));
 }
