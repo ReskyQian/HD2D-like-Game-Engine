@@ -22,6 +22,7 @@ const unsigned int SCR_HEIGHT = 1080;
 float delta_time = 0.0f;
 float last_frame = 0.0f;
 
+GLFWwindow* window;
 Hd2d::Camera camera(glm::vec3(0.0f, 2.0f, 6.0f));
 Hd2d::Input input(&camera, SCR_WIDTH, SCR_HEIGHT);
 
@@ -37,24 +38,25 @@ void glfwScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
     input.scrollCallback(window, xoffset, yoffset);
 }
 
-void initOpenGL() {
-
+void error_callback(int error, const char* description)
+{
+    fprintf(stderr, "Error: %s\n", description);
 }
 
-int main(int argc, char** argv)
-{
-    std::filesystem::path executable_path(argv[0]);
-    std::filesystem::path config_file_path = executable_path.parent_path() / "Hd2dEditor.ini";
-    Hd2d::ConfigManager config_manager;
-    config_manager.initialize(config_file_path);
+void initOpenGL() {
+    glfwSetErrorCallback(error_callback);
 
     if (!glfwInit())
-        return -1;
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Hd2d Game Engine", NULL, NULL);
-    if (!window)
-    {
+        exit(EXIT_FAILURE);
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Hd2d Game Engine", NULL, NULL);
+    if (!window) {
         glfwTerminate();
-        return -1;
+        exit(EXIT_FAILURE);
     }
 
     glfwMakeContextCurrent(window);
@@ -76,6 +78,17 @@ int main(int argc, char** argv)
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+int main(int argc, char** argv)
+{
+    initOpenGL();
+
+    // load resource
+    std::filesystem::path executable_path(argv[0]);
+    std::filesystem::path config_file_path = executable_path.parent_path() / "Hd2dEditor.ini";
+    Hd2d::ConfigManager config_manager;
+    config_manager.initialize(config_file_path);
 
     std::string model_path = (config_manager.getModelPath() / "swordMaid/swordMaid.pmx").generic_string();
     // std::string model_path = (config_manager.getTexturePath() / "nanosuit/nanosuit.obj").generic_string();
@@ -284,5 +297,6 @@ int main(int argc, char** argv)
     glDeleteVertexArrays(1, &windowVAO);
     glDeleteBuffers(1, &windowVBO);
     glfwTerminate();
+    exit(EXIT_SUCCESS);
     return 0;
 }
