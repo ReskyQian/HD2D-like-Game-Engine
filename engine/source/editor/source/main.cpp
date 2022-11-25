@@ -115,14 +115,14 @@ int main(int argc, char** argv)
     std::string blend_fs_path = (config_manager.getShaderPath() / "blending.fs").generic_string();
     ShaderProgram blend_shader(blend_vs_path, blend_fs_path);
 
+    std::string mirror_vs_path = (config_manager.getShaderPath() / "mirror.vs").generic_string();
+    std::string mirror_fs_path = (config_manager.getShaderPath() / "mirror.fs").generic_string();
+    ShaderProgram mirror_shader(mirror_vs_path, mirror_fs_path);
+
     // draw grass
     std::string grass_path = (config_manager.getTexturePath() / "grass.png").generic_string();
     std::shared_ptr<Hd2d::Texture2D> grass_texture = Hd2d::Texture2D::loadFromFile(grass_path);
     Hd2d::Texture2D::configClampWrapper();
-
-    // draw floor
-    std::string floor_path = (config_manager.getTexturePath() / "metal.png").generic_string();
-    std::shared_ptr<Hd2d::Texture2D> floor_texture = Hd2d::Texture2D::loadFromFile(floor_path);
 
     // draw windows
     std::string window_path = (config_manager.getTexturePath() / "blending_transparent_window.png").generic_string();
@@ -153,14 +153,14 @@ int main(int argc, char** argv)
     };
 
     float plane_vertices[] = {
-        // positions          // texture Coords 
-         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
-        -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
-        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+        // positions          // normals 
+         5.0f, -0.5f,  5.0f,  0.0f,  1.0f,  0.0f,
+        -5.0f, -0.5f,  5.0f,  0.0f,  1.0f,  0.0f,
+        -5.0f, -0.5f, -5.0f,  0.0f,  1.0f,  0.0f,
 
-         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
-        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
-         5.0f, -0.5f, -5.0f,  2.0f, 2.0f
+         5.0f, -0.5f,  5.0f,  0.0f,  1.0f,  0.0f,
+        -5.0f, -0.5f, -5.0f,  0.0f,  1.0f,  0.0f,
+         5.0f, -0.5f, -5.0f,  0.0f,  1.0f,  0.0f
     };
 
     float quad_vertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
@@ -256,9 +256,9 @@ int main(int argc, char** argv)
     glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(plane_vertices), &plane_vertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 
     // grass VAO
     unsigned int grassVAO, grassVBO;
@@ -316,6 +316,9 @@ int main(int argc, char** argv)
 
     skybox_shader.use();
     skybox_shader.setTexture("skybox", 0);
+
+    mirror_shader.use();
+    mirror_shader.setTexture("skybox", 0);
 
     // framebuffer configuration
     // -------------------------
@@ -385,8 +388,14 @@ int main(int argc, char** argv)
         blend_shader.setUniform("projection", projection);
         blend_shader.setUniform("view", view);
 
+        mirror_shader.use();
+        mirror_shader.setUniform("projection", projection);
+        mirror_shader.setUniform("view", view);
+        mirror_shader.setUniform("cameraPos", camera.getPosition());
+
         glStencilMask(0x00);
 
+        blend_shader.use();
         glm::mat4 model = glm::mat4(1.0f);
         // draw grass
         glBindVertexArray(grassVAO);
@@ -401,9 +410,11 @@ int main(int argc, char** argv)
         }
 
         // draw floor
+        mirror_shader.use();
         glBindVertexArray(planeVAO);
-        glBindTexture(GL_TEXTURE_2D, floor_texture->getTextureId());
-        blend_shader.setUniform("model", glm::mat4(1.0f));
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->getTextureId());
+        mirror_shader.setUniform("model", glm::mat4(1.0f));
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
