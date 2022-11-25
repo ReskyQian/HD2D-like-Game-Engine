@@ -8,6 +8,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <vector>
 #include <map>
 
 #include "editor/include/config_manager.h"
@@ -94,9 +95,9 @@ int main(int argc, char** argv)
     // std::string model_path = (config_manager.getTexturePath() / "nanosuit/nanosuit.obj").generic_string();
     Hd2d::Model our_model(model_path);
 
-    std::string color_vs_path = (config_manager.getShaderPath() / "model_loading.vs").generic_string();
-    std::string color_fs_path = (config_manager.getShaderPath() / "model_loading.fs").generic_string();
-    ShaderProgram color_shader(color_vs_path, color_fs_path);
+    std::string model_vs_path = (config_manager.getShaderPath() / "model_loading.vs").generic_string();
+    std::string model_fs_path = (config_manager.getShaderPath() / "model_loading.fs").generic_string();
+    ShaderProgram model_shader(model_vs_path, model_fs_path);
 
     std::string edge_vs_path = (config_manager.getShaderPath() / "edge.vs").generic_string();
     std::string edge_fs_path = (config_manager.getShaderPath() / "edge.fs").generic_string();
@@ -105,6 +106,14 @@ int main(int argc, char** argv)
     std::string screen_vs_path = (config_manager.getShaderPath() / "screen_shader.vs").generic_string();
     std::string screen_fs_path = (config_manager.getShaderPath() / "screen_shader.fs").generic_string();
     ShaderProgram screen_shader(screen_vs_path, screen_fs_path);
+
+    std::string skybox_vs_path = (config_manager.getShaderPath() / "skybox.vs").generic_string();
+    std::string skybox_fs_path = (config_manager.getShaderPath() / "skybox.fs").generic_string();
+    ShaderProgram skybox_shader(skybox_vs_path, skybox_fs_path);
+
+    std::string blend_vs_path = (config_manager.getShaderPath() / "blending.vs").generic_string();
+    std::string blend_fs_path = (config_manager.getShaderPath() / "blending.fs").generic_string();
+    ShaderProgram blend_shader(blend_vs_path, blend_fs_path);
 
     // draw grass
     std::string grass_path = (config_manager.getTexturePath() / "grass.png").generic_string();
@@ -120,9 +129,17 @@ int main(int argc, char** argv)
     std::shared_ptr<Hd2d::Texture2D> window_texture = Hd2d::Texture2D::loadFromFile(window_path);
     Hd2d::Texture2D::configClampWrapper();
 
-    std::string blend_vs_path = (config_manager.getShaderPath() / "blending.vs").generic_string();
-    std::string blend_fs_path = (config_manager.getShaderPath() / "blending.fs").generic_string();
-    ShaderProgram blend_shader(blend_vs_path, blend_fs_path);
+    // draw skybox
+    std::vector<std::string> faces
+    {
+        (config_manager.getTexturePath() /"skybox/right.jpg").generic_string(),
+        (config_manager.getTexturePath() /"skybox/left.jpg").generic_string(),
+        (config_manager.getTexturePath() /"skybox/top.jpg").generic_string(),
+        (config_manager.getTexturePath() /"skybox/bottom.jpg").generic_string(),
+        (config_manager.getTexturePath() /"skybox/front.jpg").generic_string(),
+        (config_manager.getTexturePath() /"skybox/back.jpg").generic_string()
+    };
+    std::shared_ptr<Hd2d::Texture2D> skybox_texture = Hd2d::Texture2D::loadCubemap(faces);
 
     float grass_vertices[] = {
         // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
@@ -186,6 +203,51 @@ int main(int argc, char** argv)
         glm::vec3( 3.5f, 0.0f, -1.6f )
     };
 
+    float skybox_vertices[] = {
+        // positions          
+        -1.0f,  1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+        -1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f
+    };
+
     // plane VAO
     unsigned int planeVAO, planeVBO;
     glGenVertexArrays(1, &planeVAO);
@@ -236,11 +298,24 @@ int main(int argc, char** argv)
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
+    // skybox VAO
+    unsigned int skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skybox_vertices), &skybox_vertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
     blend_shader.use();
     blend_shader.setTexture("texture1", 0);
 
     screen_shader.use();
     screen_shader.setTexture("screenTexture", 0);
+
+    skybox_shader.use();
+    skybox_shader.setTexture("skybox", 0);
 
     // framebuffer configuration
     // -------------------------
@@ -302,9 +377,9 @@ int main(int argc, char** argv)
         edge_shader.setUniform("projection", projection);
         edge_shader.setUniform("view", view);
 
-        color_shader.use();
-        color_shader.setUniform("projection", projection);
-        color_shader.setUniform("view", view);
+        model_shader.use();
+        model_shader.setUniform("projection", projection);
+        model_shader.setUniform("view", view);
 
         blend_shader.use();
         blend_shader.setUniform("projection", projection);
@@ -336,13 +411,13 @@ int main(int argc, char** argv)
         glStencilMask(0xFF);
 
         glEnable(GL_CULL_FACE);
-        color_shader.use();
+        model_shader.use();
         // draw the loaded model
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f)); 
         model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
-        color_shader.setUniform("model", model);
-        our_model.draw(color_shader);
+        model_shader.setUniform("model", model);
+        our_model.draw(model_shader);
 
         glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
         glStencilMask(0x00);
@@ -380,6 +455,20 @@ int main(int argc, char** argv)
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
 
+        // draw skybox
+        glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+        skybox_shader.use();
+        view = glm::mat4(glm::mat3(camera.getViewMatrix())); // remove translation from the view matrix
+        skybox_shader.setUniform("view", view);
+        skybox_shader.setUniform("projection", projection);
+        // skybox cube
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->getTextureId());
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthFunc(GL_LESS); // set depth function back to default
+
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
         // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -408,6 +497,8 @@ int main(int argc, char** argv)
     glDeleteBuffers(1, &planeVBO);
     glDeleteVertexArrays(1, &quadVAO);
     glDeleteBuffers(1, &quadVBO);
+    glDeleteVertexArrays(1, &skyboxVAO);
+    glDeleteBuffers(1, &skyboxVBO);
     glfwTerminate();
     exit(EXIT_SUCCESS);
     return 0;

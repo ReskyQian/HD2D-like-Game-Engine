@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <vector>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -20,7 +21,7 @@ namespace Hd2d {
     std::shared_ptr<Texture2D> Texture2D::loadFromFile(std::string_view image_file_path) {
         std::shared_ptr<Texture2D> texture2d = std::make_shared<Texture2D>();
 
-        // flip the image for alignment in OpenGL
+        // don't flip the image for alignment in OpenGL
         stbi_set_flip_vertically_on_load(false);
         int channels_in_file;
 
@@ -172,6 +173,37 @@ namespace Hd2d {
         return isExist && isCpt;
     }
 
+    std::shared_ptr<Texture2D> Texture2D::loadCubemap(std::vector<std::string>& faces) {
+        std::shared_ptr<Texture2D> texture2d = std::make_shared<Texture2D>();
+        glGenTextures(1, &(texture2d->gl_texture_id_));
+        glBindTexture(GL_TEXTURE_CUBE_MAP, texture2d->gl_texture_id_);
+
+        // skybox normally has rgb without a
+        int channels_in_file;
+        for (unsigned int i = 0; i < faces.size(); i++)
+        {
+            unsigned char *data = stbi_load(faces[i].c_str(), 
+            &texture2d->width_, &texture2d->height_, &channels_in_file, 0);
+            if (data)
+            {
+                glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, texture2d->width_, texture2d->height_, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+                stbi_image_free(data);
+            }
+            else
+            {
+                std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+                stbi_image_free(data);
+            }
+        }
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+        return texture2d;
+    }
+
     /// @brief Load texture from image file path
     /// @param cpt_path default load path
     /// @param png_path if cpt path is invalid, load from png path
@@ -183,8 +215,7 @@ namespace Hd2d {
         return loadFromCptFile(cpt_path);    
     }
 
-    /// @brief 把上传texture的步骤放在了最后面，不知道会不会有问题
-    /// @param texture2d 
+    /// @brief general config texture
     void Texture2D::configTexture() {
         // wrapper
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 

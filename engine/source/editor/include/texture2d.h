@@ -4,6 +4,7 @@
 #include <string>
 #include <glad/glad.h>
 #include <memory>
+#include <vector>
 
 namespace Hd2d {
     struct CptFileHead
@@ -41,6 +42,7 @@ namespace Hd2d {
         static std::shared_ptr<Texture2D> loadFromCptFile(std::string_view image_file_path);
         static void compressImageFile(std::string_view image_file_path, std::string_view save_image_file_path);
         static std::shared_ptr<Texture2D> loadTexture(std::string_view png_path, std::string_view cpt_path);
+        static std::shared_ptr<Texture2D> loadCubemap(std::vector<std::string>& faces);
         static void configTexture();
         static void generateMipmap();
         static void configClampWrapper();
