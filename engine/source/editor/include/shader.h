@@ -49,6 +49,8 @@ public:
 
     void setTexture(std::string_view name, int value) const noexcept;
 
+    void setUniformBlock(std::string_view name, int value) const noexcept;
+
 private:
     unsigned id_;
 };

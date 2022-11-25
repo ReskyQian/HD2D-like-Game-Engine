@@ -13,8 +13,7 @@
 
 #include <glad/glad.h>
 
-Shader::Shader(std::string_view file_path) : id_ { 0 }
-{
+Shader::Shader(std::string_view file_path) : id_ { 0 } {
     std::ifstream fs{};
     fs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
@@ -36,8 +35,7 @@ Shader::~Shader() {
 }
 
 VertexShader::VertexShader(std::string_view file_path)
-: Shader { file_path } 
-{
+: Shader { file_path } {
     id_ = glCreateShader(GL_VERTEX_SHADER);
     auto source_str = source_.c_str();
     glShaderSource(id_, 1, &source_str, nullptr);
@@ -53,8 +51,7 @@ VertexShader::VertexShader(std::string_view file_path)
 }
 
 FragmentShader::FragmentShader(std::string_view file_path)
-: Shader { file_path } 
-{
+: Shader { file_path } {
     id_ = glCreateShader(GL_FRAGMENT_SHADER);
     auto source_str = source_.c_str();
     glShaderSource(id_, 1, &source_str, nullptr);
@@ -70,8 +67,7 @@ FragmentShader::FragmentShader(std::string_view file_path)
 }
 
 ShaderProgram::ShaderProgram(std::string_view vertex_shader, std::string_view fragment_shader)
-: id_ { 0 }
-{
+: id_ { 0 } {
     VertexShader vertex {vertex_shader};
     FragmentShader fragment {fragment_shader};
 
@@ -95,39 +91,37 @@ ShaderProgram::~ShaderProgram() {
     }
 }
 
-void ShaderProgram::setUniform(const std::string_view name, bool value) const noexcept
-{
+void ShaderProgram::setUniform(const std::string_view name, bool value) const noexcept {
     glUniform1i(glGetUniformLocation(id_, name.data()), static_cast<int>(value));
 }
 
-void ShaderProgram::setUniform(const std::string_view name, int value) const noexcept
-{
+void ShaderProgram::setUniform(const std::string_view name, int value) const noexcept {
     glUniform1i(glGetUniformLocation(id_, name.data()), value);
 }
 
-void ShaderProgram::setUniform(const std::string_view name, unsigned int value) const noexcept
-{
+void ShaderProgram::setUniform(const std::string_view name, unsigned int value) const noexcept {
     glUniform1i(glGetUniformLocation(id_, name.data()), value);
 }
 
-void ShaderProgram::setUniform(const std::string_view name, float value) const noexcept
-{
+void ShaderProgram::setUniform(const std::string_view name, float value) const noexcept {
     glUniform1f(glGetUniformLocation(id_, name.data()), value);
 }
 
-void ShaderProgram::setUniform(const std::string_view name, const glm::vec3& value) const noexcept
-{
+void ShaderProgram::setUniform(const std::string_view name, const glm::vec3& value) const noexcept {
     glUniform3fv(glGetUniformLocation(id_, name.data()), 1, &value[0]);
 }
 
-void ShaderProgram::setUniform(const std::string_view name, const glm::mat4& value) const noexcept
-{
+void ShaderProgram::setUniform(const std::string_view name, const glm::mat4& value) const noexcept {
     glUniformMatrix4fv(glGetUniformLocation(id_, name.data()), 1, GL_FALSE, glm::value_ptr(value));
 }
 
-void ShaderProgram::setTexture(const std::string_view name, int value) const noexcept
-{
+void ShaderProgram::setTexture(const std::string_view name, int value) const noexcept {
     ShaderProgram::setUniform(name, value);
+}
+
+void ShaderProgram::setUniformBlock(std::string_view name, int value) const noexcept {
+    unsigned int uniform_block = glGetUniformBlockIndex(id_, name.data());
+    glUniformBlockBinding(id_, uniform_block, value);
 }
 
 void ShaderProgram::use() const noexcept

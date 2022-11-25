@@ -141,6 +141,7 @@ int main(int argc, char** argv)
     };
     std::shared_ptr<Hd2d::Texture2D> skybox_texture = Hd2d::Texture2D::loadCubemap(faces);
 
+    // set position attrs
     float grass_vertices[] = {
         // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
         0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
@@ -248,6 +249,7 @@ int main(int argc, char** argv)
          1.0f, -1.0f,  1.0f
     };
 
+    // set VAOs
     // plane VAO
     unsigned int planeVAO, planeVBO;
     glGenVertexArrays(1, &planeVAO);
@@ -308,20 +310,39 @@ int main(int argc, char** argv)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
+    // set shaders
     blend_shader.use();
     blend_shader.setTexture("texture1", 0);
+    blend_shader.setUniformBlock("Matrices", 0);
 
     screen_shader.use();
     screen_shader.setTexture("screenTexture", 0);
+    screen_shader.setUniformBlock("Matrices", 0);
 
     skybox_shader.use();
     skybox_shader.setTexture("skybox", 0);
+    skybox_shader.setUniformBlock("Matrices", 0);
 
     mirror_shader.use();
     mirror_shader.setTexture("skybox", 0);
+    mirror_shader.setUniformBlock("Matrices", 0);
+
+    // set a uniform buffer object
+    unsigned int ubo_matrices;
+    glGenBuffers(1, &ubo_matrices);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
+    glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    // define the range of the buffer that links to a uniform binding point
+    glBindBufferRange(GL_UNIFORM_BUFFER, 0, ubo_matrices, 0, 2 * sizeof(glm::mat4));
+
+    // store the projection matrix (we only do this once now) (note: we're not using zoom anymore by changing the FoV)
+    glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     // framebuffer configuration
-    // -------------------------
     const float buf_scale = 6.0f;
     const int buf_width  = SCR_WIDTH / buf_scale;
     const int buf_height = SCR_HEIGHT / buf_scale;
@@ -374,24 +395,10 @@ int main(int argc, char** argv)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.getViewMatrix();
-        edge_shader.use();
-        edge_shader.setUniform("projection", projection);
-        edge_shader.setUniform("view", view);
-
-        model_shader.use();
-        model_shader.setUniform("projection", projection);
-        model_shader.setUniform("view", view);
-
-        blend_shader.use();
-        blend_shader.setUniform("projection", projection);
-        blend_shader.setUniform("view", view);
-
-        mirror_shader.use();
-        mirror_shader.setUniform("projection", projection);
-        mirror_shader.setUniform("view", view);
-        mirror_shader.setUniform("cameraPos", camera.getPosition());
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo_matrices);
+        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         glStencilMask(0x00);
 
@@ -415,6 +422,7 @@ int main(int argc, char** argv)
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->getTextureId());
         mirror_shader.setUniform("model", glm::mat4(1.0f));
+        mirror_shader.setUniform("cameraPos", camera.getPosition());
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
@@ -469,9 +477,8 @@ int main(int argc, char** argv)
         // draw skybox
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skybox_shader.use();
-        view = glm::mat4(glm::mat3(camera.getViewMatrix())); // remove translation from the view matrix
-        skybox_shader.setUniform("view", view);
-        skybox_shader.setUniform("projection", projection);
+        glm::mat4 view_sp = glm::mat4(glm::mat3(camera.getViewMatrix())); // remove translation from the view matrix
+        skybox_shader.setUniform("view_sp", view_sp);
         // skybox cube
         glBindVertexArray(skyboxVAO);
         glActiveTexture(GL_TEXTURE0);
