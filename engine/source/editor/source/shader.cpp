@@ -66,7 +66,24 @@ FragmentShader::FragmentShader(std::string_view file_path)
     }
 }
 
-ShaderProgram::ShaderProgram(std::string_view vertex_shader, std::string_view fragment_shader)
+GeometryShader::GeometryShader(std::string_view file_path) 
+: Shader { file_path } {
+    id_ = glCreateShader(GL_GEOMETRY_SHADER);
+    auto source_str = source_.c_str();
+    glShaderSource(id_, 1, &source_str, nullptr);
+    glCompileShader(id_);
+
+    int success{};
+    char log_info[512];
+    glGetShaderiv(id_, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(id_, 512, nullptr, log_info);
+        std::cout << "ERROR:SHADER::GEOMETRY::COMPILEATION_FAILED\n" << log_info << std::endl;
+    }
+}
+
+ShaderProgram::ShaderProgram(std::string_view vertex_shader  , 
+                             std::string_view fragment_shader)
 : id_ { 0 } {
     VertexShader vertex {vertex_shader};
     FragmentShader fragment {fragment_shader};
@@ -74,6 +91,30 @@ ShaderProgram::ShaderProgram(std::string_view vertex_shader, std::string_view fr
     id_ = glCreateProgram();
     glAttachShader(id_, vertex.getId());
     glAttachShader(id_, fragment.getId());
+    glLinkProgram(id_);
+
+    int success{};
+    char log_info[512];
+    glGetProgramiv(id_, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(id_, 512, nullptr, log_info);
+        std::cout << "ERROR:SHADER::PROGRAM::LINK_FAILED\n" << log_info << std::endl;
+    }
+}
+
+ShaderProgram::ShaderProgram(std::string_view vertex_shader  , 
+                             std::string_view geometry_shader,
+                             std::string_view fragment_shader)
+: id_ { 0 } {
+    VertexShader vertex {vertex_shader};
+    GeometryShader geometry {geometry_shader};
+    FragmentShader fragment {fragment_shader};
+
+    id_ = glCreateProgram();
+    glAttachShader(id_, vertex.getId());
+    glAttachShader(id_, geometry.getId());
+    glAttachShader(id_, fragment.getId());
+
     glLinkProgram(id_);
 
     int success{};

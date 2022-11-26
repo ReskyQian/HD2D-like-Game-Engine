@@ -32,9 +32,18 @@ public:
     explicit FragmentShader(std::string_view file_path);
 };
 
+class GeometryShader : public Shader {
+public:
+    explicit GeometryShader(std::string_view file_path);
+};
+
 class ShaderProgram {
 public:
-    ShaderProgram(std::string_view vertex_shader, std::string_view fragment_shader);
+    ShaderProgram(std::string_view vertex_shader, 
+                  std::string_view fragment_shader);
+    ShaderProgram(std::string_view vertex_shader, 
+                  std::string_view geometry_shader,
+                  std::string_view fragment_shader);
 
     ~ShaderProgram();
 

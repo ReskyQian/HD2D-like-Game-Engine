@@ -119,6 +119,11 @@ int main(int argc, char** argv)
     std::string mirror_fs_path = (config_manager.getShaderPath() / "mirror.fs").generic_string();
     ShaderProgram mirror_shader(mirror_vs_path, mirror_fs_path);
 
+    std::string normal_vs_path = (config_manager.getShaderPath() / "normal_visualization.vs").generic_string();
+    std::string normal_gs_path = (config_manager.getShaderPath() / "normal_visualization.gs").generic_string();
+    std::string normal_fs_path = (config_manager.getShaderPath() / "normal_visualization.fs").generic_string();
+    ShaderProgram normal_shader(normal_vs_path, normal_gs_path, normal_fs_path);
+
     // draw grass
     std::string grass_path = (config_manager.getTexturePath() / "grass.png").generic_string();
     std::shared_ptr<Hd2d::Texture2D> grass_texture = Hd2d::Texture2D::loadFromFile(grass_path);
@@ -327,6 +332,9 @@ int main(int argc, char** argv)
     mirror_shader.setTexture("skybox", 0);
     mirror_shader.setUniformBlock("Matrices", 0);
 
+    normal_shader.use();
+    normal_shader.setUniformBlock("Matrices", 0);
+
     // set a uniform buffer object
     unsigned int ubo_matrices;
     glGenBuffers(1, &ubo_matrices);
@@ -343,7 +351,7 @@ int main(int argc, char** argv)
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     // framebuffer configuration
-    const float buf_scale = 6.0f;
+    const float buf_scale = 4.0f;
     const int buf_width  = SCR_WIDTH / buf_scale;
     const int buf_height = SCR_HEIGHT / buf_scale;
 
@@ -438,9 +446,12 @@ int main(int argc, char** argv)
         model_shader.setUniform("model", model);
         our_model.draw(model_shader);
 
+        normal_shader.use();
+        normal_shader.setUniform("model", model);
+        our_model.draw(normal_shader);
+
         glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
         glStencilMask(0x00);
-        glDisable(GL_DEPTH_TEST);
 
         // draw edge of model
         edge_shader.use();
@@ -459,7 +470,6 @@ int main(int argc, char** argv)
         glBindVertexArray(0);
         glStencilMask(0xFF);
         glStencilFunc(GL_ALWAYS, 0, 0xFF);
-        glEnable(GL_DEPTH_TEST);
 
         glDisable(GL_CULL_FACE);
 
