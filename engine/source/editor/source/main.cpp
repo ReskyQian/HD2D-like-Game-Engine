@@ -23,6 +23,8 @@ const unsigned int SCR_HEIGHT = 1080;
 float delta_time = 0.0f;
 float last_frame = 0.0f;
 
+bool isNormalShow = false;
+
 GLFWwindow* window;
 Hd2d::Camera camera(glm::vec3(0.0f, 2.0f, 6.0f));
 Hd2d::Input input(&camera, SCR_WIDTH, SCR_HEIGHT);
@@ -124,6 +126,10 @@ int main(int argc, char** argv)
     std::string normal_fs_path = (config_manager.getShaderPath() / "normal_visualization.fs").generic_string();
     ShaderProgram normal_shader(normal_vs_path, normal_gs_path, normal_fs_path);
 
+    std::string grass_vs_path = (config_manager.getShaderPath() / "grass.vs").generic_string();
+    std::string grass_fs_path = (config_manager.getShaderPath() / "grass.fs").generic_string();
+    ShaderProgram grass_shader(grass_vs_path, grass_fs_path);
+
     // draw grass
     std::string grass_path = (config_manager.getTexturePath() / "grass.png").generic_string();
     std::shared_ptr<Hd2d::Texture2D> grass_texture = Hd2d::Texture2D::loadFromFile(grass_path);
@@ -148,25 +154,25 @@ int main(int argc, char** argv)
 
     // set position attrs
     float grass_vertices[] = {
-        // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
-        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
-        0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
-        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+        // positions        // texture Coords (swapped y coordinates because texture is flipped upside down)
+        -0.5f, 1.0f, 0.0f,  0.0f,  0.0f,
+        -0.5f, 0.0f, 0.0f,  0.0f,  1.0f,
+         0.5f, 0.0f, 0.0f,  1.0f,  1.0f,
 
-        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
-        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
-        1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+        -0.5f, 1.0f, 0.0f,  0.0f,  0.0f,
+         0.5f, 0.0f, 0.0f,  1.0f,  1.0f,
+         0.5f, 1.0f, 0.0f,  1.0f,  0.0f
     };
 
     float plane_vertices[] = {
         // positions          // normals 
-         5.0f, -0.5f,  5.0f,  0.0f,  1.0f,  0.0f,
-        -5.0f, -0.5f,  5.0f,  0.0f,  1.0f,  0.0f,
-        -5.0f, -0.5f, -5.0f,  0.0f,  1.0f,  0.0f,
+         5.0f, 0.0f,  5.0f,  0.0f,  1.0f,  0.0f,
+        -5.0f, 0.0f,  5.0f,  0.0f,  1.0f,  0.0f,
+        -5.0f, 0.0f, -5.0f,  0.0f,  1.0f,  0.0f,
 
-         5.0f, -0.5f,  5.0f,  0.0f,  1.0f,  0.0f,
-        -5.0f, -0.5f, -5.0f,  0.0f,  1.0f,  0.0f,
-         5.0f, -0.5f, -5.0f,  0.0f,  1.0f,  0.0f
+         5.0f, 0.0f,  5.0f,  0.0f,  1.0f,  0.0f,
+        -5.0f, 0.0f, -5.0f,  0.0f,  1.0f,  0.0f,
+         5.0f, 0.0f, -5.0f,  0.0f,  1.0f,  0.0f
     };
 
     float quad_vertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
@@ -178,15 +184,6 @@ int main(int argc, char** argv)
         -1.0f,  1.0f,  0.0f, 1.0f,
          1.0f, -1.0f,  1.0f, 0.0f,
          1.0f,  1.0f,  1.0f, 1.0f
-    };
-
-    std::vector<glm::vec3> vegetation 
-    {
-        glm::vec3(-1.5f, 0.0f, -0.48f),
-        glm::vec3( 1.5f, 0.0f, 0.51f ),
-        glm::vec3( 0.0f, 0.0f, 0.7f  ),
-        glm::vec3(-0.3f, 0.0f, -2.3f ),
-        glm::vec3( 0.5f, 0.0f, -0.6f )
     };
 
     float window_vertices[] = {
@@ -202,11 +199,11 @@ int main(int argc, char** argv)
 
     std::vector<glm::vec3> windows
     {
-        glm::vec3(-1.5f, 0.0f, -1.0f),
-        glm::vec3( 1.8f, 0.0f, 0.6f ),
-        glm::vec3( 0.3f, 0.0f, 0.9f  ),
-        glm::vec3(-2.8f, 0.0f, -2.7f ),
-        glm::vec3( 3.5f, 0.0f, -1.6f )
+        glm::vec3(-1.5f, 0.5f, -1.0f ),
+        glm::vec3( 1.8f, 0.5f,  0.6f ),
+        glm::vec3( 0.3f, 0.5f,  0.9f ),
+        glm::vec3(-2.8f, 0.5f, -2.7f ),
+        glm::vec3( 3.5f, 0.5f, -1.6f )
     };
 
     float skybox_vertices[] = {
@@ -266,6 +263,7 @@ int main(int argc, char** argv)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindVertexArray(0);
 
     // grass VAO
     unsigned int grassVAO, grassVBO;
@@ -278,6 +276,59 @@ int main(int argc, char** argv)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    // generate a large list of semi-random model transformation matrices
+    // ------------------------------------------------------------------
+    unsigned int amount = 1000;
+    glm::mat4* modelMatrices;
+    modelMatrices = new glm::mat4[amount];
+    srand(static_cast<unsigned int>(glfwGetTime())); // initialize random seed
+    float offset = 4.5f;
+    for (unsigned int i = 0; i < amount; i++)
+    {
+        glm::mat4 model = glm::mat4(1.0f);
+        // 1. translation: displace in range [-offset, offset]
+        float x = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float z = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        model = glm::translate(model, glm::vec3(x, 0, z));
+
+        // 2. scale: Scale between 0.1f and 0.6f
+        float scale = static_cast<float>((rand() % 50) / 100.0 + 0.1);
+        model = glm::scale(model, glm::vec3(scale));
+
+        // 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
+        float rotAngle = static_cast<float>((rand() % 360));
+        model = glm::rotate(model, rotAngle, glm::vec3(0, 1.0f, 0));
+
+        // 4. now add to list of matrices
+        modelMatrices[i] = model;
+    }
+
+    // configure instanced array
+    // -------------------------
+    unsigned int buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+
+    // set transformation matrices as an instance vertex attribute (with divisor 1)
+    // note: we're cheating a little by taking the, now publicly declared, VAO of the model's mesh(es) and adding new vertexAttribPointers
+    // normally you'd want to do this in a more organized fashion, but for learning purposes this will do.
+    // -----------------------------------------------------------------------------------------------------------------------------------
+    // set attribute pointers for matrix (4 times vec4)
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+    glEnableVertexAttribArray(6);
+    glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+
+    glVertexAttribDivisor(3, 1);
+    glVertexAttribDivisor(4, 1);
+    glVertexAttribDivisor(5, 1);
+    glVertexAttribDivisor(6, 1);
+
     glBindVertexArray(0);
 
     // windows VAO
@@ -334,6 +385,10 @@ int main(int argc, char** argv)
 
     normal_shader.use();
     normal_shader.setUniformBlock("Matrices", 0);
+
+    grass_shader.use();
+    mirror_shader.setTexture("grass_texture", 0);
+    grass_shader.setUniformBlock("Matrices", 0);
 
     // set a uniform buffer object
     unsigned int ubo_matrices;
@@ -410,19 +465,13 @@ int main(int argc, char** argv)
 
         glStencilMask(0x00);
 
-        blend_shader.use();
-        glm::mat4 model = glm::mat4(1.0f);
         // draw grass
+        grass_shader.use();
         glBindVertexArray(grassVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, grass_texture->getTextureId());
-        for (unsigned int i = 0; i < vegetation.size(); i++)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, vegetation[i]);
-            blend_shader.setUniform("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, amount);
+        glBindVertexArray(0);
 
         // draw floor
         mirror_shader.use();
@@ -440,15 +489,17 @@ int main(int argc, char** argv)
         glEnable(GL_CULL_FACE);
         model_shader.use();
         // draw the loaded model
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f)); 
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); 
         model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
         model_shader.setUniform("model", model);
         our_model.draw(model_shader);
 
-        normal_shader.use();
-        normal_shader.setUniform("model", model);
-        our_model.draw(normal_shader);
+        if(isNormalShow) {
+            normal_shader.use();
+            normal_shader.setUniform("model", model);
+            our_model.draw(normal_shader);
+        }
 
         glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
         glStencilMask(0x00);
@@ -461,7 +512,7 @@ int main(int argc, char** argv)
         color.z = static_cast<float>(sin(glfwGetTime() * 2.6) + 1.0f);
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f)); // translate it down so it's at the center of the scene
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
         edge_shader.setUniform("color", color);
         edge_shader.setUniform("model", model);
